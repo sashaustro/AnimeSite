@@ -21,5 +21,6 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::resource('anime', AnimeController::class)->middleware('auth');
+Route::get('/anime-table', [AnimeController::class, 'tableView'])->name('anime.table')->middleware('auth');
 Route::post('/anime/{anime}/reviews', [ReviewController::class, 'store'])->name('reviews.store')->middleware('auth');
 require __DIR__ . '/auth.php';

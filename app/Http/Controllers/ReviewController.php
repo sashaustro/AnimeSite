@@ -16,12 +16,20 @@ class ReviewController extends Controller
         ]);
 
         // Зберігаємо відгук
-        Review::create([
+        $review = Review::create([
             'user_id' => auth()->id(), // Беремо ID того, хто зараз авторизований
             'anime_id' => $anime->id,  // ID аніме, яке коментують
             'rating' => $request->rating,
             'comment' => $request->comment,
         ]);
+
+        // Якщо запит надіслано через Fetch/Axios (AJAX)
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Відгук успішно додано!',
+                'review' => $review->load('user') // Завантажуємо зв'язок з користувачем
+            ], 201);
+        }
 
         // Повертаємо користувача назад на сторінку аніме
         return back();

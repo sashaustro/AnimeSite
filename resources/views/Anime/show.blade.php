@@ -23,7 +23,7 @@
     <div style="margin-top: 40px;">
         <h2>{{ __('messages.reviews_title') }}</h2>
 
-        <form action="{{ route('reviews.store', $anime->id) }}" method="POST" style="background-color: #333; padding: 15px; border-radius: 8px; margin-bottom: 20px; max-width: 600px;">
+        <form id="reviewForm" action="{{ route('reviews.store', $anime->id) }}" method="POST" style="background-color: #333; padding: 15px; border-radius: 8px; margin-bottom: 20px; max-width: 600px;">
             @csrf
             <div>
                 <label>{{ __('messages.your_rating') }}</label>
@@ -35,7 +35,8 @@
             <button type="submit" style="margin-top: 10px; padding: 8px 15px; background-color: #ff3366; color: white; border: none; cursor: pointer; border-radius: 5px;">{{ __('messages.submit_btn') }}</button>
         </form>
 
-        @foreach($anime->reviews as $review)
+        <div id="reviewsList">
+            @foreach($anime->reviews as $review)
             <div style="background-color: #252529; padding: 15px; border-radius: 8px; margin-bottom: 10px; max-width: 600px;">
                 <div style="display: flex; justify-content: space-between;">
                     <strong>{{ $review->user->name }}</strong>
@@ -44,8 +45,46 @@
                 <p style="margin: 10px 0 0 0; color: #aaa;">{{ $review->comment }}</p>
                 <small style="color: #666;">{{ $review->created_at->format('d.m.Y H:i') }}</small>
             </div>
-        @endforeach
+            @endforeach
+        </div>
     </div>
 
+    <!-- Скрипт для асинхронної відправки відгуку -->
+    <script>
+        document.getElementById('reviewForm').addEventListener('submit', function(e) {
+            e.preventDefault(); // Зупиняємо стандартне перезавантаження форми
+            
+            let form = this;
+            let formData = new FormData(form);
+            
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest', // Вказуємо, що це AJAX запит
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.review) {
+                    // Створюємо HTML для нового відгуку
+                    let newReviewHTML = `
+                        <div style="background-color: #252529; padding: 15px; border-radius: 8px; margin-bottom: 10px; max-width: 600px; border-left: 3px solid #4CAF50;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <strong>${data.review.user.name}</strong>
+                                <span style="color: #ffcc00; font-weight: bold;">★ ${data.review.rating}/10</span>
+                            </div>
+                            <p style="margin: 10px 0 0 0; color: #aaa;">${data.review.comment}</p>
+                            <small style="color: #4CAF50;">Щойно додано</small>
+                        </div>
+                    `;
+                    // Додаємо новий відгук на початок списку
+                    document.getElementById('reviewsList').insertAdjacentHTML('afterbegin', newReviewHTML);
+                    form.reset(); // Очищаємо форму
+                }
+            }).catch(error => console.error('Помилка:', error));
+        });
+    </script>
 </body>
 </html>
