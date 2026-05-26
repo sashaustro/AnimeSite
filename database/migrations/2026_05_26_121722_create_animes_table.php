@@ -13,7 +13,6 @@ return new class extends Migration {
         Schema::create('animes', function (Blueprint $table) {
             $table->id();
             $table->string('title'); // Назва аніме (обов'язково)
-            $table->string('genre'); // Жанр/Категорія
             $table->text('description')->nullable(); // Опис
             $table->string('image')->nullable(); // Посилання на картинку/постер
             $table->timestamps();

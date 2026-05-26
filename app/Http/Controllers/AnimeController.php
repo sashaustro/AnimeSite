@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Anime;
 use App\Http\Requests\AnimeRequest;
+use App\Models\Genre;
 use Illuminate\Support\Facades\Log;
 
 class AnimeController extends Controller
@@ -22,7 +23,8 @@ class AnimeController extends Controller
      */
     public function create()
     {
-        return view('Anime.create');
+        $genres = Genre::all();
+        return view('Anime.create', compact('genres'));
     }
 
     /**
@@ -33,6 +35,9 @@ class AnimeController extends Controller
         // 1. Отримуємо вже перевірені дані з нашого AnimeRequest
         $data = $request->validated();
 
+        $genres = $data['genres'] ?? [];
+        unset($data['genres']); // Видаляємо з масиву, щоб це поле не заважало під час створення Anime
+
         // 2. Збереження картинки (якщо вона є)
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('posters', 'public');
@@ -42,8 +47,11 @@ class AnimeController extends Controller
         // 3. Збереження в базу
         $newAnime = Anime::create($data);
 
-        // Логуємо інформацію про додавання замість відправки email через SMTP
-        Log::info("Нове аніме додано в каталог! Назва: {$newAnime->title}, Жанр: {$newAnime->genre}");
+        // 4. Прив'язка жанрів до аніме
+        $newAnime->genres()->attach($genres);
+
+        // Логуємо інформацію про додавання (без старого поля genre)
+        Log::info("Нове аніме додано в каталог! Назва: {$newAnime->title}");
 
         return redirect()->route('anime.index');
     }
@@ -62,8 +70,9 @@ class AnimeController extends Controller
      */
     public function edit(string $id)
     {
-        $anime = Anime::findOrFail($id);
-        return view('Anime.edit', compact('anime'));
+        $anime = Anime::with('genres')->findOrFail($id);
+        $genres = Genre::all();
+        return view('Anime.edit', compact('anime', 'genres'));
     }
 
     /**
@@ -74,6 +83,9 @@ class AnimeController extends Controller
         $anime = Anime::findOrFail($id);
 
         $data = $request->validated();
+        
+        $genres = $data['genres'] ?? [];
+        unset($data['genres']);
 
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('posters', 'public');
@@ -81,6 +93,8 @@ class AnimeController extends Controller
         }
 
         $anime->update($data);
+        // sync() автоматично відв'яже старі жанри та прив'яже нові
+        $anime->genres()->sync($genres);
 
         return redirect()->route('anime.index');
     }
