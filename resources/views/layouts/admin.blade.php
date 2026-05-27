@@ -66,6 +66,12 @@
               <p>Список аніме</p>
             </a>
           </li>
+          <li class="nav-item">
+            <a href="{{ route('admin.genres.index') }}" class="nav-link">
+              <i class="nav-icon fas fa-tags"></i>
+              <p>Жанри</p>
+            </a>
+          </li>
           <li class="nav-header">КОРИСТУВАЧІ</li>
           <li class="nav-item">
             <a href="{{ route('admin.users.index') }}" class="nav-link">

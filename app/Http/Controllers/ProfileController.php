@@ -17,7 +17,7 @@ class ProfileController extends Controller
     public function dashboard()
     {
         $user = auth()->user();
-        
+
         // Отримуємо останні перегляди користувача
         $watchHistory = $user->watchHistories()->with(['anime', 'episode'])->take(10)->get();
 
@@ -33,7 +33,32 @@ class ProfileController extends Controller
 
         $collections = $user->collections()->withCount('animes')->get();
 
-        return view('dashboard', compact('watchHistory', 'stats', 'collections', 'user'));
+        // Динаміка перегляду серій за останні 7 днів
+        $last7Days = collect();
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i)->format('Y-m-d');
+            $last7Days->put($date, 0);
+        }
+
+        $historyData = $user->watchHistories()
+            ->where('updated_at', '>=', now()->subDays(6)->startOfDay())
+            ->get()
+            ->groupBy(function($item) {
+                return $item->updated_at->format('Y-m-d');
+            });
+
+        foreach ($historyData as $date => $items) {
+            if ($last7Days->has($date)) {
+                $last7Days[$date] = $items->count();
+            }
+        }
+
+        $watchDynamics = [
+            'labels' => $last7Days->keys()->map(fn($d) => \Carbon\Carbon::parse($d)->format('d.m'))->values()->toArray(),
+            'data' => $last7Days->values()->toArray()
+        ];
+
+        return view('dashboard', compact('watchHistory', 'stats', 'collections', 'user', 'watchDynamics'));
     }
 
     public function lists(Request $request)
@@ -58,10 +83,16 @@ class ProfileController extends Controller
 
         if ($sort === 'added_desc') {
             $lists = $lists->sortByDesc('created_at');
+        } elseif ($sort === 'added_asc') {
+            $lists = $lists->sortBy('created_at');
         } elseif ($sort === 'year_desc') {
             $lists = $lists->sortByDesc(fn($list) => $list->anime->year);
+        } elseif ($sort === 'year_asc') {
+            $lists = $lists->sortBy(fn($list) => $list->anime->year);
         } elseif ($sort === 'title_asc') {
             $lists = $lists->sortBy(fn($list) => $list->anime->title);
+        } elseif ($sort === 'title_desc') {
+            $lists = $lists->sortByDesc(fn($list) => $list->anime->title);
         }
 
         return view('profile.lists', compact('lists', 'status', 'sort'));
@@ -86,19 +117,29 @@ class ProfileController extends Controller
         $user = $request->user();
 
         $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'username' => ['required', 'string', 'max:255', 'unique:users,username,'.$user->id],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,'.$user->id],
+            'name' => ['nullable', 'string', 'max:255'],
+            'username' => ['nullable', 'string', 'max:255', 'unique:users,username,'.$user->id],
+            'email' => ['nullable', 'string', 'email', 'max:255', 'unique:users,email,'.$user->id],
             'age' => ['nullable', 'integer', 'min:1', 'max:150'],
             'phone' => ['nullable', 'string', 'max:20'],
             'password' => ['nullable', 'confirmed', \Illuminate\Validation\Rules\Password::defaults()],
+            'avatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+            'profile_status' => ['nullable', 'string', 'max:80'],
         ]);
 
-        $user->name = $request->name;
-        $user->username = $request->username;
-        $user->email = $request->email;
-        $user->age = $request->age;
-        $user->phone = $request->phone;
+        if ($request->has('name')) $user->name = $request->name;
+        if ($request->has('username')) $user->username = $request->username;
+        if ($request->has('email')) $user->email = $request->email;
+        if ($request->has('age')) $user->age = $request->age;
+        if ($request->has('phone')) $user->phone = $request->phone;
+        if ($request->has('profile_status')) $user->profile_status = $request->profile_status;
+
+        if ($request->hasFile('avatar')) {
+            if ($user->avatar && \Illuminate\Support\Facades\Storage::disk('public')->exists($user->avatar)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($user->avatar);
+            }
+            $user->avatar = $request->file('avatar')->store('avatars', 'public');
+        }
 
         if ($request->filled('password')) {
             $user->password = \Illuminate\Support\Facades\Hash::make($request->password);
@@ -106,7 +147,7 @@ class ProfileController extends Controller
 
         $user->save();
 
-        return Redirect::route('cabinet')->with('success', 'Профіль успішно оновлено!');
+        return Redirect::back()->with('success', 'Профіль успішно оновлено!');
     }
 
     /**

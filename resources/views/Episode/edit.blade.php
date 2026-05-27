@@ -8,20 +8,20 @@
     <div class="card-header">
         <h3 class="card-title">Інформація про епізод</h3>
     </div>
-    
+
     <form action="{{ route('episodes.update', $episode->id) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')
-        
+
         <div class="card-body">
             <div class="form-group">
                 <label>Номер серії</label>
-                <input type="number" class="form-control" name="episode_number" value="{{ $episode->episode_number }}" required>
+                <input type="number" class="form-control" name="episode_number" min="1" value="{{ $episode->episode_number }}" required>
             </div>
 
             <div class="form-group">
-                <label>Назва серії (необов'язково)</label>
-                <input type="text" class="form-control" name="title" value="{{ $episode->title }}">
+                <label>Озвучка</label>
+                <input type="text" class="form-control" name="title" value="{{ $episode->title }}" required>
             </div>
 
             <div class="form-group">

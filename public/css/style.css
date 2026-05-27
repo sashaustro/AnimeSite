@@ -1,4 +1,4 @@
-/* 
+/*
  * AniHub-style Custom CSS
  * This uses Vanilla CSS for layout, colors, and typography to mimic the requested design.
  */
@@ -13,7 +13,7 @@
     --accent-hover: #7c3aed;
     --gradient-primary: linear-gradient(90deg, #8b5cf6, #d946ef);
     --border-color: #2d3748;
-    
+
     --radius-sm: 4px;
     --radius-md: 8px;
     --radius-lg: 12px;
@@ -361,4 +361,43 @@ a:hover {
 .ep-btn:hover, .ep-btn.active {
     background: var(--gradient-primary);
     border-color: transparent;
+}
+
+/* Custom Checkbox */
+.collection-checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: var(--bg-dark);
+    margin: 0;
+    font: inherit;
+    color: currentColor;
+    width: 1.2em;
+    height: 1.2em;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    display: grid;
+    place-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.collection-checkbox::before {
+    content: "";
+    width: 0.65em;
+    height: 0.65em;
+    transform: scale(0);
+    transition: 120ms transform ease-in-out;
+    box-shadow: inset 1em 1em white;
+    background-color: white;
+    transform-origin: center;
+    clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+}
+
+.collection-checkbox:checked::before {
+    transform: scale(1);
+}
+
+.collection-checkbox:checked {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
 }

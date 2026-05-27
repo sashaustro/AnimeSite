@@ -8,18 +8,18 @@
     <div class="card-header">
         <h3 class="card-title">Інформація про епізод</h3>
     </div>
-    
+
     <form action="{{ route('episodes.store', $anime->id) }}" method="POST" enctype="multipart/form-data">
         @csrf
         <div class="card-body">
             <div class="form-group">
                 <label>Номер серії</label>
-                <input type="number" class="form-control" name="episode_number" required placeholder="Наприклад: 1">
+                <input type="number" class="form-control" name="episode_number" min="1" required placeholder="Наприклад: 1">
             </div>
 
             <div class="form-group">
-                <label>Назва серії (необов'язково)</label>
-                <input type="text" class="form-control" name="title" placeholder="Наприклад: Початок історії">
+                <label>Озвучка</label>
+                <input type="text" class="form-control" name="title" required placeholder="Наприклад: FanVoxUA">
             </div>
 
             <div class="form-group">

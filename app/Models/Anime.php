@@ -8,6 +8,7 @@ class Anime extends Model
 {
     protected $fillable = [
         'title',
+        'original_title',
         'description',
         'image',
         'studio',
@@ -22,7 +23,17 @@ class Anime extends Model
     {
         return $this->hasMany(Review::class);
     }
-    
+
+    public function comments()
+    {
+        return $this->hasMany(Comment::class)->latest();
+    }
+
+    public function ratings()
+    {
+        return $this->hasMany(Rating::class);
+    }
+
     public function episodes()
     {
         return $this->hasMany(Episode::class)->orderBy('episode_number', 'asc');

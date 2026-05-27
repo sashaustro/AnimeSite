@@ -25,13 +25,21 @@ Route::middleware(['auth'])->group(function () {
     // Списки та Колекції (Аякс)
     Route::post('/anime/{anime}/list-status', [\App\Http\Controllers\UserListController::class, 'updateStatus'])->name('user.list.status');
     Route::post('/anime/{anime}/list-favorite', [\App\Http\Controllers\UserListController::class, 'toggleFavorite'])->name('user.list.favorite');
-    
+
     // Колекції (CRUD)
     Route::post('/collections', [\App\Http\Controllers\CollectionController::class, 'store'])->name('collections.store');
     Route::put('/collections/{collection}', [\App\Http\Controllers\CollectionController::class, 'update'])->name('collections.update');
     Route::delete('/collections/{collection}', [\App\Http\Controllers\CollectionController::class, 'destroy'])->name('collections.destroy');
     Route::post('/collections/{collection}/anime/{anime}', [\App\Http\Controllers\CollectionController::class, 'toggleAnime'])->name('collections.toggle_anime');
+    // Ratings and Comments
+    Route::post('/anime/{anime}/ratings', [\App\Http\Controllers\RatingController::class, 'store'])->name('ratings.store');
+    Route::delete('/anime/{anime}/ratings', [\App\Http\Controllers\RatingController::class, 'destroy'])->name('ratings.destroy');
+    Route::post('/anime/{anime}/comments', [\App\Http\Controllers\CommentController::class, 'store'])->name('comments.store');
+    Route::delete('/comments/{comment}', [\App\Http\Controllers\CommentController::class, 'destroy'])->name('comments.destroy');
 });
+
+// Публічний профіль
+Route::get('/user/{id}', [\App\Http\Controllers\PublicProfileController::class, 'show'])->name('profile.public');
 
 // 3. АДМІН (Захищено auth + admin)
 Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
@@ -45,13 +53,23 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/users', [\App\Http\Controllers\Admin\UserController::class, 'index'])->name('admin.users.index');
     Route::post('/users/{user}/toggle-role', [\App\Http\Controllers\Admin\UserController::class, 'toggleRole'])->name('admin.users.toggle_role');
 
+    // Жанри
+    Route::resource('genres', \App\Http\Controllers\Admin\GenreController::class)->except(['show'])->names([
+        'index' => 'admin.genres.index',
+        'create' => 'admin.genres.create',
+        'store' => 'admin.genres.store',
+        'edit' => 'admin.genres.edit',
+        'update' => 'admin.genres.update',
+        'destroy' => 'admin.genres.destroy',
+    ]);
+
     // Episodes
     Route::get('/anime/{anime}/episodes/create', [EpisodeController::class, 'create'])->name('episodes.create');
     Route::post('/anime/{anime}/episodes', [EpisodeController::class, 'store'])->name('episodes.store');
     Route::get('/episodes/{episode}/edit', [EpisodeController::class, 'edit'])->name('episodes.edit');
     Route::put('/episodes/{episode}', [EpisodeController::class, 'update'])->name('episodes.update');
     Route::delete('/episodes/{episode}', [EpisodeController::class, 'destroy'])->name('episodes.destroy');
-    
+
     Route::post('/episodes/upload-chunk', [EpisodeController::class, 'uploadChunk'])->name('episodes.upload_chunk');
     Route::get('/episodes/upload-chunk', [EpisodeController::class, 'uploadChunk']);
 });

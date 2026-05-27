@@ -4,33 +4,111 @@
 
 @section('content')
 <div class="container">
-    <h2 class="section-title">Мій Кабінет</h2>
+    <div class="profile-header" style="display: flex; flex-direction: column; align-items: center; margin-bottom: 2.5rem; text-align: center;">
+        <!-- Avatar -->
+        <div style="position: relative; width: 120px; height: 120px; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center;">
+            @if($user->avatar)
+                <img src="{{ asset('storage/' . $user->avatar) }}" alt="Avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color);">
+            @else
+                <div style="width: 100%; height: 100%; border-radius: 50%; background: var(--bg-card); border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 3rem; color: var(--text-muted);">
+                    <i class="fas fa-user"></i>
+                </div>
+            @endif
+
+            <button onclick="document.getElementById('avatar-upload').click()" style="position: absolute; bottom: 5px; right: 5px; background: var(--accent-color); color: white; border: none; border-radius: 50%; width: 36px; height: 36px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.3);" title="Змінити аватар">
+                <i class="fas fa-camera"></i>
+            </button>
+            <form id="avatar-form" action="{{ route('cabinet.profile.update') }}" method="POST" enctype="multipart/form-data" style="display: none;">
+                @csrf
+                @method('PUT')
+                <input type="file" name="avatar" id="avatar-upload" accept="image/*" onchange="document.getElementById('avatar-form').submit()">
+            </form>
+        </div>
+
+        <!-- Username & Status -->
+        <div style="display: flex; justify-content: center; margin-bottom: 0.5rem;">
+            <div style="position: relative; display: inline-flex; align-items: center; transform: translateX(-12px);">
+                <h2 style="margin: 0; font-size: 1.5rem;">{{ $user->username }}</h2>
+                <span style="position: absolute; left: 100%; margin-left: 0.5rem; background: var(--bg-card); color: var(--text-muted); font-size: 0.8rem; padding: 0.1rem 0.5rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); display: inline-flex; align-items: center; justify-content: center;">1</span>
+            </div>
+        </div>
+
+        <div style="color: var(--text-primary); margin-bottom: 0.5rem; cursor: pointer;" onclick="document.getElementById('statusModal').style.display='flex'">
+            {{ $user->profile_status ?: 'Статус не встановлено' }}
+        </div>
+
+        <div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;">
+            онлайн <i class="fas fa-chevron-right" style="font-size: 0.7rem; margin-left: 2px;"></i>
+        </div>
+
+        <!-- Stats Row -->
+        <div style="display: flex; justify-content: center; gap: 2rem; margin-bottom: 1.5rem;">
+            <div style="text-align: center; width: 90px;">
+                <div style="font-size: 1.2rem; font-weight: bold; color: var(--accent-color);">{{ $user->comments->count() }}</div>
+                <div style="font-size: 0.9rem; color: var(--text-muted);">Коментарів</div>
+            </div>
+            <div style="text-align: center; width: 90px;">
+                <div style="font-size: 1.2rem; font-weight: bold; color: var(--accent-color);">{{ $user->collections->count() }}</div>
+                <div style="font-size: 0.9rem; color: var(--text-muted);">Колекцій</div>
+            </div>
+            <div style="text-align: center; width: 90px;">
+                <div style="font-size: 1.2rem; font-weight: bold; color: var(--accent-color);">0</div>
+                <div style="font-size: 0.9rem; color: var(--text-muted);">Друзів</div>
+            </div>
+        </div>
+
+        <button class="btn btn-outline" style="width: 100%; max-width: 300px; color: var(--accent-color); border-color: var(--border-color); font-weight: normal; border-radius: 20px;" onclick="document.getElementById('btn-settings').click(); document.getElementById('settings-tab').scrollIntoView({behavior: 'smooth'})">Редагувати</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <!-- Статистика -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
-        <div style="background: var(--bg-card); padding: 1rem; border-radius: var(--radius-md); text-align: center; border: 1px solid var(--border-color);">
-            <div style="font-size: 2rem; font-weight: bold; color: var(--accent-color);">{{ $stats['watching'] ?? 0 }}</div>
-            <div style="font-size: 0.85rem; color: var(--text-muted);">Переглядаю</div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2rem; margin-bottom: 2rem;">
+
+        <!-- Загальна статистика (Donut Chart) -->
+        <div style="background: var(--bg-card); padding: 1.5rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+            <div style="flex: 1; min-width: 150px;">
+                <h3 style="margin-top: 0; margin-bottom: 1.5rem; font-size: 1.2rem; color: var(--text-primary);">Статистика <i class="fas fa-info-circle" style="color: var(--text-muted); font-size: 0.9rem;"></i></h3>
+
+                <div style="display: flex; flex-direction: column; gap: 0.8rem; font-size: 0.95rem;">
+                    <div style="display: flex; align-items: center; gap: 0.7rem;">
+                        <div style="width: 14px; height: 14px; border-radius: 4px; background-color: #2ecc71;"></div>
+                        <span style="color: var(--text-muted); width: 110px;">Переглядаю</span>
+                        <strong style="color: var(--text-primary); font-size: 1.1rem;">{{ $stats['watching'] ?? 0 }}</strong>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.7rem;">
+                        <div style="width: 14px; height: 14px; border-radius: 4px; background-color: #9b59b6;"></div>
+                        <span style="color: var(--text-muted); width: 110px;">В планах</span>
+                        <strong style="color: var(--text-primary); font-size: 1.1rem;">{{ $stats['plan_to_watch'] ?? 0 }}</strong>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.7rem;">
+                        <div style="width: 14px; height: 14px; border-radius: 4px; background-color: #3498db;"></div>
+                        <span style="color: var(--text-muted); width: 110px;">Переглянуто</span>
+                        <strong style="color: var(--text-primary); font-size: 1.1rem;">{{ $stats['completed'] ?? 0 }}</strong>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.7rem;">
+                        <div style="width: 14px; height: 14px; border-radius: 4px; background-color: #f1c40f;"></div>
+                        <span style="color: var(--text-muted); width: 110px;">Відкладено</span>
+                        <strong style="color: var(--text-primary); font-size: 1.1rem;">{{ $stats['on_hold'] ?? 0 }}</strong>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.7rem;">
+                        <div style="width: 14px; height: 14px; border-radius: 4px; background-color: #e74c3c;"></div>
+                        <span style="color: var(--text-muted); width: 110px;">Кинуто</span>
+                        <strong style="color: var(--text-primary); font-size: 1.1rem;">{{ $stats['dropped'] ?? 0 }}</strong>
+                    </div>
+                </div>
+            </div>
+            <div style="width: 180px; height: 180px; position: relative;">
+                <canvas id="statusChart"></canvas>
+            </div>
         </div>
-        <div style="background: var(--bg-card); padding: 1rem; border-radius: var(--radius-md); text-align: center; border: 1px solid var(--border-color);">
-            <div style="font-size: 2rem; font-weight: bold; color: #3498db;">{{ $stats['plan_to_watch'] ?? 0 }}</div>
-            <div style="font-size: 0.85rem; color: var(--text-muted);">В планах</div>
-        </div>
-        <div style="background: var(--bg-card); padding: 1rem; border-radius: var(--radius-md); text-align: center; border: 1px solid var(--border-color);">
-            <div style="font-size: 2rem; font-weight: bold; color: #2ecc71;">{{ $stats['completed'] ?? 0 }}</div>
-            <div style="font-size: 0.85rem; color: var(--text-muted);">Переглянуто</div>
-        </div>
-        <div style="background: var(--bg-card); padding: 1rem; border-radius: var(--radius-md); text-align: center; border: 1px solid var(--border-color);">
-            <div style="font-size: 2rem; font-weight: bold; color: #f1c40f;">{{ $stats['on_hold'] ?? 0 }}</div>
-            <div style="font-size: 0.85rem; color: var(--text-muted);">Відкладено</div>
-        </div>
-        <div style="background: var(--bg-card); padding: 1rem; border-radius: var(--radius-md); text-align: center; border: 1px solid var(--border-color);">
-            <div style="font-size: 2rem; font-weight: bold; color: #e74c3c;">{{ $stats['dropped'] ?? 0 }}</div>
-            <div style="font-size: 0.85rem; color: var(--text-muted);">Кинуто</div>
-        </div>
-        <div style="background: var(--bg-card); padding: 1rem; border-radius: var(--radius-md); text-align: center; border: 1px solid var(--border-color);">
-            <div style="font-size: 2rem; font-weight: bold; color: #e84393;">{{ $stats['favorites'] ?? 0 }}</div>
-            <div style="font-size: 0.85rem; color: var(--text-muted);">Ізбране</div>
+
+        <!-- Динаміка перегляду (Bar Chart) -->
+        <div style="background: var(--bg-card); padding: 1.5rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+            <h3 style="margin-top: 0; margin-bottom: 1.5rem; font-size: 1.2rem; color: var(--text-primary);">Динаміка перегляду серій <i class="fas fa-info-circle" style="color: var(--text-muted); font-size: 0.9rem;"></i></h3>
+            <div style="height: 180px; position: relative;">
+                <canvas id="dynamicsChart"></canvas>
+            </div>
         </div>
     </div>
 
@@ -38,7 +116,7 @@
     <div style="display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; align-items: center;">
         <button onclick="document.getElementById('history-tab').style.display='block'; document.getElementById('settings-tab').style.display='none'; this.style.color='var(--accent-color)'; document.getElementById('btn-settings').style.color='var(--text-primary)';" id="btn-history" style="background: none; border: none; color: var(--accent-color); font-size: 1.1rem; font-weight: 600; cursor: pointer;">Історія переглядів</button>
         <button onclick="document.getElementById('settings-tab').style.display='block'; document.getElementById('history-tab').style.display='none'; this.style.color='var(--accent-color)'; document.getElementById('btn-history').style.color='var(--text-primary)';" id="btn-settings" style="background: none; border: none; color: var(--text-primary); font-size: 1.1rem; font-weight: 600; cursor: pointer;">Налаштування профілю</button>
-        
+
         <div style="margin-left: auto; display: flex; gap: 1rem;">
             <a href="{{ route('cabinet.lists') }}" class="btn btn-outline" style="padding: 0.4rem 1rem;"><i class="fas fa-list"></i> Мої списки</a>
             <a href="{{ route('cabinet.collections') }}" class="btn btn-outline" style="padding: 0.4rem 1rem;"><i class="fas fa-folder"></i> Колекції</a>
@@ -56,7 +134,7 @@
                         @else
                             <div style="width: 80px; background: #333; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;">Немає</div>
                         @endif
-                        
+
                         <div style="padding: 1rem; flex: 1;">
                             <h4 style="font-weight: 600; margin-bottom: 0.5rem; font-size: 1rem;">
                                 @if($history->anime)
@@ -92,7 +170,7 @@
             <form action="{{ route('cabinet.profile.update') }}" method="POST">
                 @csrf
                 @method('PUT')
-                
+
                 <div class="form-group" style="margin-bottom: 1.5rem;">
                     <label class="form-label">Ім'я (як до вас звертатись)</label>
                     <input type="text" name="name" class="form-control" value="{{ old('name', auth()->user()->name) }}" required>
@@ -139,6 +217,121 @@
                 </div>
 
                 <button type="submit" class="btn btn-primary" style="padding: 0.8rem 2rem;">Зберегти зміни</button>
+            </form>
+        </div>
+    </div>
+    <script>
+        // Status Chart (Donut)
+        const ctxStatus = document.getElementById('statusChart').getContext('2d');
+        new Chart(ctxStatus, {
+            type: 'doughnut',
+            data: {
+                labels: ['Переглядаю', 'В планах', 'Переглянуто', 'Відкладено', 'Кинуто'],
+                datasets: [{
+                    data: [
+                        {{ $stats['watching'] ?? 0 }},
+                        {{ $stats['plan_to_watch'] ?? 0 }},
+                        {{ $stats['completed'] ?? 0 }},
+                        {{ $stats['on_hold'] ?? 0 }},
+                        {{ $stats['dropped'] ?? 0 }}
+                    ],
+                    backgroundColor: [
+                        '#2ecc71', // Переглядаю (greenish)
+                        '#9b59b6', // В планах (purple)
+                        '#3498db', // Переглянуто (blue)
+                        '#f1c40f', // Відкладено (yellow)
+                        '#e74c3c'  // Кинуто (red)
+                    ],
+                    borderWidth: 0,
+                    cutout: '65%'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return ' ' + context.label + ': ' + context.raw;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Dynamics Chart (Bar)
+        const ctxDynamics = document.getElementById('dynamicsChart').getContext('2d');
+        new Chart(ctxDynamics, {
+            type: 'bar',
+            data: {
+                labels: @json($watchDynamics['labels']),
+                datasets: [{
+                    label: 'Переглянуто серій',
+                    data: @json($watchDynamics['data']),
+                    backgroundColor: '#ef4444',
+                    borderRadius: 4,
+                    barThickness: 16
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        display: false,
+                        beginAtZero: true,
+                        max: Math.max(...@json($watchDynamics['data'])) + 2
+                    },
+                    x: {
+                        grid: { display: false },
+                        border: { display: false },
+                        ticks: {
+                            color: '#9ca3af',
+                            font: { size: 11 }
+                        }
+                    }
+                },
+                layout: {
+                    padding: { top: 20 }
+                }
+            },
+            plugins: [{
+                id: 'topLabels',
+                afterDatasetsDraw(chart, args, pluginOptions) {
+                    const { ctx, data } = chart;
+                    ctx.save();
+                    chart.getDatasetMeta(0).data.forEach((datapoint, index) => {
+                        const value = data.datasets[0].data[index];
+                        if (value > 0) {
+                            ctx.font = 'bold 13px sans-serif';
+                            ctx.fillStyle = '#9ca3af';
+                            ctx.textAlign = 'center';
+                            ctx.fillText(value, datapoint.x, datapoint.y - 8);
+                        }
+                    });
+                }
+            }]
+        });
+    </script>
+    <div id="statusModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: var(--bg-card); padding: 1.5rem; border-radius: var(--radius-lg); width: 100%; max-width: 400px; position: relative;">
+            <h3 style="margin-top: 0; margin-bottom: 1rem; color: var(--text-primary);">Змінити статус</h3>
+            <form action="{{ route('cabinet.profile.update') }}" method="POST">
+                @csrf
+                @method('PUT')
+                <textarea name="profile_status" rows="3" class="form-control" style="width: 100%; resize: none; margin-bottom: 0.5rem;" maxlength="80" placeholder="Ваш статус..." oninput="document.getElementById('status-counter').innerText = this.value.length + '/80'">{{ $user->profile_status }}</textarea>
+                <div style="text-align: right; color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1rem;" id="status-counter">{{ mb_strlen($user->profile_status ?: '') }}/80</div>
+
+                <div style="display: flex; gap: 1rem;">
+                    <button type="button" class="btn btn-outline" style="flex: 1; border-radius: 20px; color: var(--accent-color); border-color: var(--border-color);" onclick="document.getElementById('statusModal').style.display='none'">Скасувати</button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1; border-radius: 20px; background-color: #ef4444; border-color: #ef4444; color: white;">Зберегти</button>
+                </div>
             </form>
         </div>
     </div>

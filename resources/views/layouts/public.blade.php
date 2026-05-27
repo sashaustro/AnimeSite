@@ -4,20 +4,21 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', 'Anime Portal CMS')</title>
-    
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <!-- CSS -->
     <link href="{{ asset('css/style.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     @stack('styles')
 </head>
 <body>
     <nav class="navbar">
         <a href="{{ route('home') }}" class="nav-brand">ANI<span>HUB</span></a>
-        
+
         <div class="nav-links">
             <a href="{{ route('home') }}" class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}">Аніме</a>
             <a href="{{ route('anime.genres') }}" class="nav-link {{ request()->routeIs('anime.genres') ? 'active' : '' }}">Жанри</a>
@@ -26,13 +27,49 @@
         </div>
 
         <div class="nav-links" style="gap: 0.8rem;">
-            <!-- Пошук -->
-            <form action="{{ route('home') }}" method="GET" style="display: flex; align-items: center;">
-                <input type="text" name="search" placeholder="Пошук аніме..." value="{{ request('search') }}" style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-primary); padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.9rem; outline: none; width: 160px; max-width: 100%;">
-                <button type="submit" style="background: none; border: none; color: var(--text-muted); margin-left: -30px; cursor: pointer;">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                </button>
-            </form>
+            <!-- Розширюваний пошук -->
+            <style>
+                .nav-search-container { position: relative; display: flex; align-items: center; }
+                #navSearchForm { display: flex; align-items: center; position: relative; }
+                #navSearchForm input {
+                    width: 0; opacity: 0; padding: 0; border: 1px solid transparent;
+                    transition: width 0.3s ease, opacity 0.3s ease, padding 0.3s ease, background 0.3s ease, border-color 0.3s ease;
+                    background: transparent; color: var(--text-primary);
+                    border-radius: 20px; height: 36px; outline: none; font-size: 0.9rem;
+                }
+                #navSearchForm.active input {
+                    width: 350px; opacity: 1; padding: 0 35px 0 35px;
+                    background: transparent;
+                    border: 1px solid rgba(255, 255, 255, 0.15);
+                }
+                #navSearchToggle {
+                    background: transparent; border: 1px solid rgba(255, 255, 255, 0.15);
+                    color: #a0aec0;
+                    border-radius: 20px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+                    cursor: pointer; transition: all 0.3s ease;
+                    z-index: 10;
+                }
+                #navSearchForm.active #navSearchToggle {
+                    position: absolute; left: 0; top: 0; height: 100%; border: none;
+                    background: transparent; color: var(--text-primary);
+                }
+                #navSearchToggle:hover { background: rgba(255, 255, 255, 0.1); color: #fff; border-color: rgba(255, 255, 255, 0.3); }
+                #navSearchClear {
+                    display: none; position: absolute; right: 15px; color: var(--text-muted);
+                    cursor: pointer; z-index: 10; font-size: 0.9rem;
+                }
+                #navSearchForm.active #navSearchClear { display: block; }
+                #navSearchClear:hover { color: #dc3545; }
+            </style>
+            <div class="nav-search-container">
+                <form action="{{ route('home') }}" method="GET" id="navSearchForm" class="{{ request('search') ? 'active' : '' }}">
+                    <button type="button" id="navSearchToggle" title="Пошук">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <input type="text" name="search" id="navSearchInput" placeholder="Пошук аніме або @користувач..." value="{{ request('search') }}">
+                    <i class="fas fa-times" id="navSearchClear" title="Очистити"></i>
+                </form>
+            </div>
 
             @auth
                 @if(auth()->user()->isAdmin())
@@ -49,6 +86,7 @@
                         </div>
                     </div>
                 @endif
+                <a href="{{ route('cabinet.collections') }}" class="btn btn-outline" style="font-size: 0.8rem; padding: 0.3rem 0.8rem;" title="Мої колекції"><i class="fas fa-layer-group"></i> Колекції</a>
                 <a href="{{ route('cabinet.lists') }}" class="btn btn-outline" style="font-size: 0.8rem; padding: 0.3rem 0.8rem;" title="Мої списки"><i class="fas fa-bookmark"></i> Закладки</a>
                 <a href="{{ route('cabinet') }}" class="btn btn-outline" style="font-size: 0.8rem; padding: 0.3rem 0.8rem;">Кабінет</a>
                 <form method="POST" action="{{ route('logout') }}" style="display:inline;">
@@ -72,10 +110,43 @@
                 {{ session('success') }}
             </div>
         @endif
-        
+
         @yield('content')
     </main>
 
     @stack('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggleBtn = document.getElementById('navSearchToggle');
+            const searchForm = document.getElementById('navSearchForm');
+            const searchInput = document.getElementById('navSearchInput');
+            const closeBtn = document.getElementById('navSearchClear');
+
+            if (toggleBtn && searchForm && searchInput && closeBtn) {
+                toggleBtn.addEventListener('click', function(e) {
+                    if (!searchForm.classList.contains('active')) {
+                        e.preventDefault();
+                        searchForm.classList.add('active');
+                        searchInput.focus();
+                    } else if (searchInput.value.trim() !== '') {
+                        searchForm.submit();
+                    } else {
+                        e.preventDefault();
+                        searchForm.classList.remove('active');
+                    }
+                });
+
+                closeBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    searchInput.value = '';
+                    if (window.location.search.includes('search=')) {
+                        window.location.href = "{{ route('home') }}";
+                    } else {
+                        searchForm.classList.remove('active');
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>
