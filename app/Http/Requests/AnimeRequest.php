@@ -24,9 +24,15 @@ class AnimeRequest extends FormRequest
     {
         return [
             'title' => 'required|min:2|max:100',
-            'genre' => 'required',
-            'description' => 'nullable|max:1000',
-            'image' => 'nullable|image'
+            'genre' => 'nullable',
+            'description' => 'nullable|max:2000',
+            'image' => 'nullable|image',
+            'year' => 'nullable|integer|min:1950|max:2100',
+            'format' => 'nullable|string|max:50',
+            'country' => 'nullable|string|max:50',
+            'studio' => 'nullable|string|max:100',
+            'voice_acting' => 'nullable|string|max:100',
+            'status' => 'nullable|string|in:ongoing,completed,announced'
         ];  
     }
 }

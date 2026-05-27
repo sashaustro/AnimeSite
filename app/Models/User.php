@@ -20,6 +20,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'username',
         'email',
         'password',
     ];
@@ -47,8 +48,28 @@ class User extends Authenticatable
         ];
     }
 
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    public function watchHistories()
+    {
+        return $this->hasMany(WatchHistory::class)->orderBy('watched_at', 'desc');
+    }
+
     public function reviews()
     {
         return $this->hasMany(Review::class);
+    }
+
+    public function animeLists()
+    {
+        return $this->hasMany(UserAnimeList::class);
+    }
+
+    public function collections()
+    {
+        return $this->hasMany(Collection::class);
     }
 }

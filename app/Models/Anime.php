@@ -8,13 +8,38 @@ class Anime extends Model
 {
     protected $fillable = [
         'title',
-        'genre',
         'description',
         'image',
+        'studio',
+        'voice_acting',
+        'status',
+        'year',
+        'format',
+        'country'
     ];
 
     public function reviews()
     {
         return $this->hasMany(Review::class);
+    }
+    
+    public function episodes()
+    {
+        return $this->hasMany(Episode::class)->orderBy('episode_number', 'asc');
+    }
+
+    public function genres()
+    {
+        return $this->belongsToMany(Genre::class, 'anime_genre', 'anime_id', 'genre_id');
+    }
+
+    public function userLists()
+    {
+        return $this->hasMany(UserAnimeList::class);
+    }
+
+    public function collections()
+    {
+        return $this->belongsToMany(Collection::class, 'collection_anime');
     }
 }

@@ -4,16 +4,57 @@ namespace App\Http\Controllers;
 
 use App\Models\Anime;
 use App\Http\Requests\AnimeRequest;
+use App\Services\AnimeService;
+use Illuminate\Http\Request;
 
 class AnimeController extends Controller
 {
+    protected $animeService;
+
+    public function __construct(\App\Services\AnimeService $animeService)
+    {
+        $this->animeService = $animeService;
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $animes = Anime::paginate(4);
+        $query = Anime::query();
+        
+        if (request()->has('search') && request('search') !== null) {
+            $query->where('title', 'like', '%' . request('search') . '%');
+        }
+        
+        $animes = $query->orderBy('updated_at', 'desc')->paginate(12);
         return view('Anime.index', compact('animes'));
+    }
+
+    public function genres()
+    {
+        // Поки що виведемо всі аніме як заглушку, пізніше тут буде вибірка по таблиці genres
+        $animes = Anime::orderBy('id', 'desc')->paginate(12);
+        return view('Anime.genres', compact('animes'));
+    }
+
+    public function ongoing()
+    {
+        $animes = Anime::where('status', 'ongoing')->orderBy('id', 'desc')->paginate(12);
+        return view('Anime.index', compact('animes'))->with('pageTitle', 'Онгоїнги');
+    }
+
+    public function top()
+    {
+        // Заглушка для ТОП рейтингу (сортування за ID поки немає оцінок)
+        $animes = Anime::orderBy('id', 'asc')->paginate(12);
+        return view('Anime.index', compact('animes'))->with('pageTitle', 'Топ рейтингу');
+    }
+
+    public function adminIndex()
+    {
+        $animes = Anime::orderBy('id', 'desc')->paginate(20);
+        return view('admin.anime.index', compact('animes'));
     }
 
     /**
@@ -27,21 +68,23 @@ class AnimeController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(AnimeRequest $request)
+    public function store(Request $request)
     {
-        // 1. Отримуємо вже перевірені дані з нашого AnimeRequest
-        $data = $request->validated();
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'year' => 'nullable|integer',
+            'format' => 'nullable|string|max:100',
+            'country' => 'nullable|string|max:100',
+            'studio' => 'nullable|string|max:100',
+            'voice_acting' => 'nullable|string|max:100',
+            'status' => 'nullable|string|max:50',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
 
-        // 2. Збереження картинки (якщо вона є)
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('posters', 'public');
-            $data['image'] = $path;
-        }
+        $this->animeService->storeAnime($validated);
 
-        // 3. Збереження в базу
-        Anime::create($data);
-
-        return redirect()->route('anime.index');
+        return redirect()->route('anime.admin_index')->with('success', 'Аніме успішно додано!');
     }
 
     /**
@@ -49,7 +92,25 @@ class AnimeController extends Controller
      */
     public function show(string $id)
     {
-        $anime = Anime::with('reviews.user')->findOrFail($id);
+        $anime = Anime::with(['reviews.user', 'episodes'])->findOrFail($id);
+        
+        $currentEpId = request('ep');
+        $currentEpisode = $currentEpId ? $anime->episodes->firstWhere('id', $currentEpId) : $anime->episodes->first();
+
+        // Запис історії переглядів
+        if (auth()->check() && $currentEpisode) {
+            \App\Models\WatchHistory::updateOrCreate(
+                [
+                    'user_id' => auth()->id(),
+                    'anime_id' => $anime->id,
+                    'episode_id' => $currentEpisode->id,
+                ],
+                [
+                    'watched_at' => now(),
+                ]
+            );
+        }
+
         return view('Anime.show', compact('anime'));
     }
 
@@ -65,20 +126,25 @@ class AnimeController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(AnimeRequest $request, string $id)
+    public function update(Request $request, string $id)
     {
         $anime = Anime::findOrFail($id);
 
-        $data = $request->validated();
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'year' => 'nullable|integer',
+            'format' => 'nullable|string|max:100',
+            'country' => 'nullable|string|max:100',
+            'studio' => 'nullable|string|max:100',
+            'voice_acting' => 'nullable|string|max:100',
+            'status' => 'nullable|string|max:50',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
 
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('posters', 'public');
-            $data['image'] = $path;
-        }
+        $this->animeService->updateAnime($anime, $validated);
 
-        $anime->update($data);
-
-        return redirect()->route('anime.index');
+        return redirect()->route('anime.admin_index')->with('success', 'Аніме успішно оновлено!');
     }
 
     /**
@@ -89,6 +155,6 @@ class AnimeController extends Controller
         $anime = Anime::findOrFail($id);
         $anime->delete();
 
-        return redirect()->route('anime.index');
+        return redirect()->route('anime.admin_index')->with('success', 'Аніме видалено!');
     }
 }

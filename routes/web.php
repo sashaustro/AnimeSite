@@ -4,22 +4,65 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AnimeController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\EpisodeController;
 
-Route::get('/', function () {
-    return view('welcome');
+// 1. ПУБЛІЧНІ (Без авторизації)
+Route::get('/', [AnimeController::class, 'index'])->name('home');
+Route::get('/genres', [AnimeController::class, 'genres'])->name('anime.genres');
+Route::get('/ongoing', [AnimeController::class, 'ongoing'])->name('anime.ongoing');
+Route::get('/top', [AnimeController::class, 'top'])->name('anime.top');
+Route::get('/anime/{anime}', [AnimeController::class, 'show'])->name('anime.show');
+
+// 2. АВТОРИЗОВАНІ (Кабінет)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/cabinet', [ProfileController::class, 'dashboard'])->name('cabinet');
+    Route::get('/cabinet/lists', [ProfileController::class, 'lists'])->name('cabinet.lists');
+    Route::get('/cabinet/collections', [ProfileController::class, 'collections'])->name('cabinet.collections');
+    Route::put('/cabinet/profile', [ProfileController::class, 'updateProfile'])->name('cabinet.profile.update');
+    Route::post('/logout', [\App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'destroy'])->name('logout');
+    Route::post('/anime/{anime}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+
+    // Списки та Колекції (Аякс)
+    Route::post('/anime/{anime}/list-status', [\App\Http\Controllers\UserListController::class, 'updateStatus'])->name('user.list.status');
+    Route::post('/anime/{anime}/list-favorite', [\App\Http\Controllers\UserListController::class, 'toggleFavorite'])->name('user.list.favorite');
+    
+    // Колекції (CRUD)
+    Route::post('/collections', [\App\Http\Controllers\CollectionController::class, 'store'])->name('collections.store');
+    Route::put('/collections/{collection}', [\App\Http\Controllers\CollectionController::class, 'update'])->name('collections.update');
+    Route::delete('/collections/{collection}', [\App\Http\Controllers\CollectionController::class, 'destroy'])->name('collections.destroy');
+    Route::post('/collections/{collection}/anime/{anime}', [\App\Http\Controllers\CollectionController::class, 'toggleAnime'])->name('collections.toggle_anime');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+// 3. АДМІН (Захищено auth + admin)
+Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
+    Route::get('/anime', [AnimeController::class, 'adminIndex'])->name('anime.admin_index');
+    Route::get('/anime/create', [AnimeController::class, 'create'])->name('anime.create');
+    Route::post('/anime', [AnimeController::class, 'store'])->name('anime.store');
+    Route::get('/anime/{anime}/edit', [AnimeController::class, 'edit'])->name('anime.edit');
+    Route::put('/anime/{anime}', [AnimeController::class, 'update'])->name('anime.update');
+    Route::delete('/anime/{anime}', [AnimeController::class, 'destroy'])->name('anime.destroy');
+    // Користувачі
+    Route::get('/users', [\App\Http\Controllers\Admin\UserController::class, 'index'])->name('admin.users.index');
+    Route::post('/users/{user}/toggle-role', [\App\Http\Controllers\Admin\UserController::class, 'toggleRole'])->name('admin.users.toggle_role');
 
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
+    // Episodes
+    Route::get('/anime/{anime}/episodes/create', [EpisodeController::class, 'create'])->name('episodes.create');
+    Route::post('/anime/{anime}/episodes', [EpisodeController::class, 'store'])->name('episodes.store');
+    Route::get('/episodes/{episode}/edit', [EpisodeController::class, 'edit'])->name('episodes.edit');
+    Route::put('/episodes/{episode}', [EpisodeController::class, 'update'])->name('episodes.update');
+    Route::delete('/episodes/{episode}', [EpisodeController::class, 'destroy'])->name('episodes.destroy');
+    
+    Route::post('/episodes/upload-chunk', [EpisodeController::class, 'uploadChunk'])->name('episodes.upload_chunk');
+    Route::get('/episodes/upload-chunk', [EpisodeController::class, 'uploadChunk']);
 });
 
-Route::resource('anime', AnimeController::class)->middleware('auth');
-Route::post('/anime/{anime}/reviews', [ReviewController::class, 'store'])->name('reviews.store')->middleware('auth');
-require __DIR__ . '/auth.php';
+// Відображення локальних відеофайлів (обхід проблеми з symlink на Windows)
+Route::get('/stream/episodes/{filename}', function ($filename) {
+    $path = storage_path('app/public/episodes/' . $filename);
+    if (!file_exists($path)) {
+        abort(404);
+    }
+    return response()->file($path);
+})->name('episodes.video');
+
+require __DIR__.'/auth.php';

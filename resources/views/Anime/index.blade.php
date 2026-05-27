@@ -1,57 +1,72 @@
-<!DOCTYPE html>
-<html lang="uk">
+@extends('layouts.public')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AnimeSite - {{ __('messages.catalog_title') }}</title>
-</head>
+@section('title', 'AniHub - Головна')
 
-<body style="background-color: #1a1a1d; color: white; font-family: sans-serif; padding: 20px;">
-
-    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px;">
-        <h1 style="margin: 0;">{{ __('messages.catalog_title') }}</h1>
-        <a href="{{ route('anime.create') }}" style="background-color: #ff3366; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px; font-weight: bold;">{{ __('messages.add_anime') }}</a>
+@section('content')
+<!-- Hero Section / Featured Anime (Placeholder for now, can be dynamic later) -->
+@if($animes->count() > 0)
+    <div style="position: relative; border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 3rem; background: var(--bg-card); display: flex; align-items: center; min-height: 400px; padding: 2rem;">
+        <div style="flex: 1; z-index: 10;">
+            <h1 style="font-size: 3rem; font-weight: 800; margin-bottom: 0.5rem; line-height: 1.1;">{{ $animes->first()->title }}</h1>
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; align-items: center;">
+                <span style="background: var(--bg-dark); padding: 0.2rem 0.6rem; border-radius: var(--radius-full); font-size: 0.8rem;">{{ $animes->first()->year ?? '2024' }}</span>
+                <span style="background: var(--bg-dark); padding: 0.2rem 0.6rem; border-radius: var(--radius-full); font-size: 0.8rem;">{{ $animes->first()->format ?? 'Серіал' }}</span>
+            </div>
+            <p style="color: var(--text-muted); max-width: 600px; margin-bottom: 2rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                {{ $animes->first()->description }}
+            </p>
+            <a href="{{ route('anime.show', $animes->first()->id) }}" class="btn btn-primary" style="padding: 0.8rem 2rem; font-size: 1.1rem;">Детальніше</a>
+        </div>
+        @if($animes->first()->image)
+            <div style="position: absolute; right: 0; top: 0; bottom: 0; width: 60%; mask-image: linear-gradient(to right, transparent, black); -webkit-mask-image: linear-gradient(to right, transparent 10%, black 50%); z-index: 1;">
+                <img src="{{ asset('storage/' . $animes->first()->image) }}" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.5;" alt="poster">
+            </div>
+        @endif
     </div>
+@endif
 
-    <div style="display: flex; flex-wrap: wrap; gap: 20px;">
+<!-- Catalog Section -->
+<section>
+    <h2 class="section-title">{{ $pageTitle ?? 'Останні оновлення' }}</h2>
+</section>
 
-        @foreach($animes as $item)
-            <div style="background-color: #252529; border-radius: 8px; width: 220px; padding: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.3);">
-
-                @if($item->image)
-                    <img src="{{ asset('storage/' . $item->image) }}" alt="{{ $item->title }}" style="width: 100%; height: 300px; object-fit: cover; border-radius: 5px;">
-                @else
-                    <div style="width: 100%; height: 300px; background-color: #333; border-radius: 5px; display: flex; align-items: center; justify-content: center;">{{ __('messages.no_poster') }}</div>
-                @endif
-
-                <h3 style="margin: 10px 0 5px 0; font-size: 18px;">{{ $item->title }}</h3>
-                <span style="background-color: #ff3366; padding: 2px 8px; border-radius: 12px; font-size: 12px;">{{ $item->genre }}</span>
-
-                <p style="font-size: 14px; color: #aaa; margin-top: 10px;">
-                    {{ \Illuminate\Support\Str::limit($item->description, 80) }}
-                </p>
-                
-                <a href="{{ route('anime.show', $item->id) }}" style="display: block; margin-top: 10px; margin-bottom: 15px; color: #ff3366; text-decoration: none; font-weight: bold;">{{ __('messages.details') }} &rarr;</a>
-                
-                <div style="margin-top: 15px; display: flex; gap: 10px;">
-                    <a href="{{ route('anime.edit', $item->id) }}" style="background-color: #4CAF50; color: white; padding: 5px 10px; text-decoration: none; border-radius: 3px; font-size: 14px;">Редагувати</a>
-
-                    <form action="{{ route('anime.destroy', $item->id) }}" method="POST" onsubmit="return confirm('Точно видалити це аніме?');">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" style="background-color: #f44336; color: white; border: none; padding: 5px 10px; border-radius: 3px; font-size: 14px; cursor: pointer;">Видалити</button>
-                    </form>
+<div class="anime-grid">
+    @forelse($animes as $item)
+        <a href="{{ route('anime.show', $item->id) }}" class="anime-card">
+            <span class="badge">NEW</span>
+            <div class="rating-badge">
+                <svg width="12" height="12" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                9.5
+            </div>
+            
+            @if($item->image)
+                <img src="{{ asset('storage/' . $item->image) }}" alt="{{ $item->title }}" class="anime-poster">
+            @else
+                <div class="anime-poster" style="background-color: #252529; display: flex; align-items: center; justify-content: center; color: #666;">Немає постера</div>
+            @endif
+            
+            <div class="anime-info">
+                <h3 class="anime-title" title="{{ $item->title }}">{{ $item->title }}</h3>
+                <div class="anime-meta">
+                    <span>
+                        @if(isset($item->genres) && $item->genres->count() > 0)
+                            {{ $item->genres->first()->name }}
+                        @else
+                            Аніме
+                        @endif
+                    </span>
+                    <span>Серія {{ $item->episodes->count() }}</span>
                 </div>
             </div>
-        @endforeach
+        </a>
+    @empty
+        <div style="grid-column: 1 / -1; text-align: center; padding: 50px; color: var(--text-muted);">
+            <h2>Каталог порожній...</h2>
+        </div>
+    @endforelse
+</div>
 
-    </div>
-
-    <div style="margin-top: 40px;">
-        {{ $animes->links() }}
-    </div>
-
-</body>
-
-</html>
+<div style="margin-top: 3rem; display: flex; justify-content: center;">
+    {{ $animes->links() }}
+</div>
+@endsection
