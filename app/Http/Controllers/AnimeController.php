@@ -19,36 +19,139 @@ class AnimeController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    private function applyFilters($query, Request $request)
     {
-        $query = Anime::query();
-
-        if (request()->has('search') && request('search') !== null) {
-            $query->where('title', 'like', '%' . request('search') . '%');
+        if ($request->filled('search')) {
+            $query->where('title', 'like', '%' . $request->search . '%');
+        }
+        if ($request->filled('formats')) {
+            $query->whereIn('format', $request->formats);
+        }
+        if ($request->filled('statuses')) {
+            $query->whereIn('status', $request->statuses);
+        }
+        if ($request->filled('countries')) {
+            $query->whereIn('country', $request->countries);
+        }
+        if ($request->filled('studios')) {
+            $query->whereIn('studio', $request->studios);
+        }
+        if ($request->filled('genres')) {
+            $query->whereHas('genres', function($q) use ($request) {
+                $q->whereIn('genres.id', $request->genres);
+            });
+        }
+        if ($request->filled('year_min')) {
+            $query->where('year', '>=', $request->year_min);
+        }
+        if ($request->filled('year_max')) {
+            $query->where('year', '<=', $request->year_max);
         }
 
-        $animes = $query->orderBy('updated_at', 'desc')->paginate(12);
-        return view('Anime.index', compact('animes'));
+        $sort = $request->get('sort', 'default');
+        switch ($sort) {
+            case 'popular':
+                $query->withCount('ratings')->orderByDesc('ratings_count');
+                break;
+            case 'newest':
+                $query->orderBy('year', 'desc')->orderBy('created_at', 'desc');
+                break;
+            case 'oldest':
+                $query->orderBy('year', 'asc')->orderBy('created_at', 'asc');
+                break;
+            case 'rating':
+                if (!request()->routeIs('anime.top')) {
+                    $query->withAvg('ratings', 'score')->orderByDesc('ratings_avg_score');
+                }
+                break;
+            case 'default':
+            default:
+                if (!request()->routeIs('anime.top')) {
+                    $query->orderBy('updated_at', 'desc');
+                }
+                break;
+        }
+        return $query;
+    }
+
+    private function getFilterData()
+    {
+        return [
+            'filterGenres' => \App\Models\Genre::orderBy('name')->get(),
+            'filterStudios' => Anime::whereNotNull('studio')->where('studio', '!=', '')
+                ->select('studio', \Illuminate\Support\Facades\DB::raw('count(*) as total'))
+                ->groupBy('studio')->orderByDesc('total')->get(),
+            'filterCountries' => Anime::whereNotNull('country')->where('country', '!=', '')->distinct()->pluck('country'),
+            'filterFormats' => Anime::whereNotNull('format')->where('format', '!=', '')->where('format', '!=', 'Невідомо')->distinct()->pluck('format'),
+            'filterStatuses' => Anime::whereNotNull('status')->where('status', '!=', '')->distinct()->pluck('status'),
+            'minYear' => Anime::min('year') ?? 1900,
+            'maxYear' => Anime::max('year') ?? date('Y')
+        ];
+    }
+
+    public function index(Request $request)
+    {
+        $query = Anime::query();
+        $query = $this->applyFilters($query, $request);
+        $animes = $query->paginate(12)->appends($request->all());
+
+        if ($request->ajax()) {
+            return view('Anime.partials.grid', compact('animes'))->render();
+        }
+
+        $heroAnimes = Anime::with(['genres', 'ratings'])->orderBy('created_at', 'desc')->take(5)->get();
+        return view('Anime.index', array_merge(compact('animes', 'heroAnimes'), $this->getFilterData()));
     }
 
     public function genres()
     {
-        // Поки що виведемо всі аніме як заглушку, пізніше тут буде вибірка по таблиці genres
         $animes = Anime::orderBy('id', 'desc')->paginate(12);
         return view('Anime.genres', compact('animes'));
     }
 
-    public function ongoing()
+    public function ongoing(Request $request)
     {
-        $animes = Anime::where('status', 'ongoing')->orderBy('id', 'desc')->paginate(12);
-        return view('Anime.index', compact('animes'))->with('pageTitle', 'Онгоїнги');
+        $query = Anime::where('status', 'ongoing');
+        $query = $this->applyFilters($query, $request);
+        $animes = $query->paginate(12)->appends($request->all());
+
+        if ($request->ajax()) {
+            return view('Anime.partials.grid', compact('animes'))->render();
+        }
+        
+        $heroAnimes = Anime::with(['genres', 'ratings'])->where('status', 'ongoing')->orderBy('created_at', 'desc')->take(5)->get();
+        return view('Anime.index', array_merge(compact('animes', 'heroAnimes'), $this->getFilterData()))->with('pageTitle', 'Онгоїнги');
     }
 
-    public function top()
+    public function top(Request $request)
     {
-        // Заглушка для ТОП рейтингу (сортування за ID поки немає оцінок)
-        $animes = Anime::orderBy('id', 'asc')->paginate(12);
-        return view('Anime.index', compact('animes'))->with('pageTitle', 'Топ рейтингу');
+        $query = Anime::withAvg('ratings', 'score');
+        
+        // If sorting isn't specifically overridden, sort by rating for the top page
+        if (!$request->filled('sort') || $request->sort == 'default') {
+            $query->orderByDesc('ratings_avg_score');
+        }
+        
+        $query = $this->applyFilters($query, $request);
+        
+        // Limit to top 100 exactly
+        $allTop100 = $query->take(100)->get();
+        $page = \Illuminate\Pagination\Paginator::resolveCurrentPage() ?: 1;
+        $perPage = 12;
+        $animes = new \Illuminate\Pagination\LengthAwarePaginator(
+            $allTop100->forPage($page, $perPage),
+            $allTop100->count(),
+            $perPage,
+            $page,
+            ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath(), 'query' => $request->query()]
+        );
+
+        if ($request->ajax()) {
+            return view('Anime.partials.grid', compact('animes'))->render();
+        }
+        
+        $heroAnimes = Anime::with(['genres', 'ratings'])->withAvg('ratings', 'score')->orderByDesc('ratings_avg_score')->take(5)->get();
+        return view('Anime.index', array_merge(compact('animes', 'heroAnimes'), $this->getFilterData()))->with('pageTitle', 'Топ рейтингу');
     }
 
     public function adminIndex(\Illuminate\Http\Request $request)
@@ -107,8 +210,8 @@ class AnimeController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'original_title' => 'nullable|string|max:255',
+            'title' => 'required|string|max:500',
+            'original_title' => 'nullable|string|max:500',
             'description' => 'nullable|string',
             'year' => 'nullable|integer',
             'format' => 'nullable|string|max:100',
@@ -119,6 +222,12 @@ class AnimeController extends Controller
             'image_url' => 'nullable|url|max:2048',
             'genres' => 'nullable|array',
             'genres.*' => 'exists:genres,id',
+            'total_episodes' => 'nullable|integer|min:1',
+            'duration' => 'nullable|string|max:100',
+            'broadcast_day' => 'nullable|string|max:50',
+            'source' => 'nullable|string|max:100',
+            'author' => 'nullable|string|max:255',
+            'season' => 'nullable|string|max:50',
         ]);
 
         $this->animeService->storeAnime($validated);
@@ -129,9 +238,20 @@ class AnimeController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Request $request, string $id)
     {
-        $anime = Anime::with(['reviews.user', 'episodes', 'genres', 'comments.user', 'ratings'])->findOrFail($id);
+        $anime = Anime::with(['reviews.user', 'episodes', 'genres', 'ratings'])->findOrFail($id);
+
+        $commentsQuery = \App\Models\Comment::with('user')->where('anime_id', $id);
+        $sort = $request->query('sort', 'new');
+        if ($sort == 'old') {
+            $commentsQuery->orderBy('created_at', 'asc');
+        } elseif ($sort == 'popular') {
+            $commentsQuery->withSum('votes', 'vote')->orderBy('votes_sum_vote', 'desc')->orderBy('created_at', 'desc');
+        } else {
+            $commentsQuery->orderBy('created_at', 'desc');
+        }
+        $commentsList = $commentsQuery->get();
 
         $currentEpId = request('ep');
         $currentEpisode = $currentEpId ? $anime->episodes->firstWhere('id', $currentEpId) : $anime->episodes->first();
@@ -161,7 +281,13 @@ class AnimeController extends Controller
           ->take(10)
           ->get();
 
-        return view('Anime.show', compact('anime', 'currentEpisode', 'similarAnimes'));
+        $listStats = \App\Models\UserAnimeList::select('status', \DB::raw('count(*) as count'))
+            ->where('anime_id', $anime->id)
+            ->groupBy('status')
+            ->pluck('count', 'status')
+            ->toArray();
+
+        return view('Anime.show', compact('anime', 'currentEpisode', 'similarAnimes', 'commentsList', 'listStats'));
     }
 
     /**
@@ -182,8 +308,8 @@ class AnimeController extends Controller
         $anime = Anime::findOrFail($id);
 
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'original_title' => 'nullable|string|max:255',
+            'title' => 'required|string|max:500',
+            'original_title' => 'nullable|string|max:500',
             'description' => 'nullable|string',
             'year' => 'nullable|integer',
             'format' => 'nullable|string|max:100',
@@ -194,6 +320,12 @@ class AnimeController extends Controller
             'image_url' => 'nullable|url|max:2048',
             'genres' => 'nullable|array',
             'genres.*' => 'exists:genres,id',
+            'total_episodes' => 'nullable|integer|min:1',
+            'duration' => 'nullable|string|max:100',
+            'broadcast_day' => 'nullable|string|max:50',
+            'source' => 'nullable|string|max:100',
+            'author' => 'nullable|string|max:255',
+            'season' => 'nullable|string|max:50',
         ]);
 
         $this->animeService->updateAnime($anime, $validated);

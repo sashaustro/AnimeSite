@@ -83,7 +83,7 @@
                 <button type="button" class="btn-search-icon" id="toggleUserSearch" title="Пошук">
                     <i class="fas fa-search"></i>
                 </button>
-                <input type="text" name="search" id="userSearchInput" placeholder="Пошук за ім'ям, нікнеймом або email..." value="{{ request('search') }}">
+                <input type="text" name="search" id="userSearchInput" placeholder="Пошук за ID, ім'ям, нікнеймом або email..." value="{{ request('search') }}">
                 <i class="fas fa-times close-search" id="closeUserSearch" title="Очистити"></i>
             </div>
 
@@ -101,53 +101,76 @@
         </form>
     </div>
 
-    <div class="card-body p-0">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="bg-light">
-                <tr>
-                    <th class="border-0">ID</th>
-                    <th class="border-0">Ім'я</th>
-                    <th class="border-0">Нікнейм</th>
-                    <th class="border-0">Email</th>
-                    <th class="border-0">Роль</th>
-                    <th class="border-0 text-right">Дії</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($users as $user)
-                    <tr>
-                        <td><strong>{{ $user->id }}</strong></td>
-                        <td>{{ $user->name }}</td>
-                        <td><a href="{{ route('profile.public', $user->id) }}" target="_blank" class="text-dark font-weight-bold">{{ $user->username ?? '—' }}</a></td>
-                        <td><a href="mailto:{{ $user->email }}">{{ $user->email }}</a></td>
-                        <td>
-                            @if($user->role === 'admin')
-                                <span class="badge badge-danger px-2 py-1">Адміністратор</span>
-                            @else
-                                <span class="badge badge-secondary px-2 py-1">Користувач</span>
-                            @endif
-                        </td>
-                        <td class="text-right">
-                            @if(auth()->id() !== $user->id)
-                                <form action="{{ route('admin.users.toggle_role', $user->id) }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="btn btn-sm {{ $user->role === 'admin' ? 'btn-warning' : 'btn-success' }}">
-                                        @if($user->role === 'admin')
-                                            Забрати права адміна
-                                        @else
-                                            Зробити адміном
-                                        @endif
-                                    </button>
-                                </form>
-                            @else
-                                <span class="text-muted">Це ви</span>
-                            @endif
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
+    @php
+        $groups = [
+            ['title' => 'Адміністратори', 'users' => $users->where('role', 'admin'), 'color' => 'danger'],
+            ['title' => 'Користувачі', 'users' => $users->where('role', 'user'), 'color' => 'secondary']
+        ];
+    @endphp
+
+    @foreach($groups as $index => $group)
+        @if($group['users']->count() > 0)
+            <div class="card-header bg-light {{ $index > 0 ? 'border-top' : '' }} border-bottom-0 py-2">
+                <div class="d-flex justify-content-between align-items-center w-100">
+                    <h6 class="m-0 font-weight-bold text-{{ $group['color'] }} text-uppercase" style="font-size: 0.85rem; letter-spacing: 0.5px;">{{ $group['title'] }}</h6>
+                    <span class="badge badge-{{ $group['color'] }} px-2 py-1">{{ $group['users']->count() }} на цій сторінці</span>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-white">
+                        <tr>
+                            <th class="border-0 border-bottom text-muted" style="font-size: 0.85rem; width: 5%;">ID</th>
+                            <th class="border-0 border-bottom text-muted" style="font-size: 0.85rem; width: 20%;">Ім'я</th>
+                            <th class="border-0 border-bottom text-muted" style="font-size: 0.85rem; width: 15%;">Нікнейм</th>
+                            <th class="border-0 border-bottom text-muted" style="font-size: 0.85rem; width: 25%;">Email</th>
+                            <th class="border-0 border-bottom text-muted" style="font-size: 0.85rem; width: 15%;">Роль</th>
+                            <th class="border-0 border-bottom text-right text-muted" style="font-size: 0.85rem; width: 20%;">Дії</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($group['users'] as $user)
+                            <tr>
+                                <td><strong>{{ $user->id }}</strong></td>
+                                <td>{{ $user->name }}</td>
+                                <td><a href="{{ route('profile.public', $user->id) }}" target="_blank" class="text-dark font-weight-bold">{{ $user->username ?? '—' }}</a></td>
+                                <td><a href="mailto:{{ $user->email }}">{{ $user->email }}</a></td>
+                                <td>
+                                    @if($user->role === 'admin')
+                                        <span class="badge badge-danger px-2 py-1">Адміністратор</span>
+                                    @else
+                                        <span class="badge badge-secondary px-2 py-1">Користувач</span>
+                                    @endif
+                                </td>
+                                <td class="text-right">
+                                    @if(auth()->id() !== $user->id)
+                                        <form action="{{ route('admin.users.toggle_role', $user->id) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm {{ $user->role === 'admin' ? 'btn-warning' : 'btn-success' }}">
+                                                @if($user->role === 'admin')
+                                                    Забрати права адміна
+                                                @else
+                                                    Зробити адміном
+                                                @endif
+                                            </button>
+                                        </form>
+                                    @else
+                                        <span class="text-muted">Це ви</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
+    @endforeach
+
+    @if($users->isEmpty())
+        <div class="card-body text-center text-muted py-4">
+            Користувачів не знайдено
+        </div>
+    @endif
 
     @if($users->hasPages())
         <div class="card-footer">

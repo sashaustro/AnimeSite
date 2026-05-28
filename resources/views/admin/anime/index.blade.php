@@ -137,7 +137,7 @@
             <table class="table table-hover align-middle mb-0">
                 <thead class="bg-light">
                     <tr>
-                        <th class="border-0">ID</th>
+                        <th class="border-0">№</th>
                         <th class="border-0">Постер</th>
                         <th class="border-0" style="min-width: 150px;">Назва</th>
                         <th class="border-0">Рік/Статус</th>
@@ -150,7 +150,7 @@
                 <tbody>
                     @forelse($animes as $anime)
                         <tr ondblclick="window.location='{{ route('anime.edit', $anime->id) }}'" style="cursor: pointer;" title="Двічі клацніть, щоб редагувати">
-                            <td><strong>{{ $anime->id }}</strong></td>
+                            <td><strong>{{ ($animes->currentPage() - 1) * $animes->perPage() + $loop->iteration }}</strong></td>
                             <td>
                                 @if($anime->image)
                                     <img src="{{ str_starts_with($anime->image, 'http') ? $anime->image : asset('storage/' . $anime->image) }}" alt="poster" width="60" class="rounded shadow-sm">

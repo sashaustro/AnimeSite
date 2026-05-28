@@ -16,7 +16,13 @@ class Anime extends Model
         'status',
         'year',
         'format',
-        'country'
+        'country',
+        'total_episodes',
+        'duration',
+        'broadcast_day',
+        'source',
+        'author',
+        'season'
     ];
 
     public function reviews()

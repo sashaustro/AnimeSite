@@ -17,4 +17,14 @@ class Comment extends Model
     {
         return $this->belongsTo(Anime::class);
     }
+
+    public function votes()
+    {
+        return $this->hasMany(CommentVote::class);
+    }
+
+    public function getRatingAttribute()
+    {
+        return $this->votes()->sum('vote');
+    }
 }

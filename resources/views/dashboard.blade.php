@@ -4,6 +4,11 @@
 
 @section('content')
 <div class="container">
+    <div class="breadcrumb" style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+        <a href="{{ route('home') }}" style="color: var(--text-muted); text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='var(--accent-color)'" onmouseout="this.style.color='var(--text-muted)'">AniHub</a>
+        <i class="fas fa-chevron-right" style="font-size: 0.7rem; color: #555;"></i>
+        <span style="color: var(--text-primary); font-weight: 600;">Кабінет</span>
+    </div>
     <div class="profile-header" style="display: flex; flex-direction: column; align-items: center; margin-bottom: 2.5rem; text-align: center;">
         <!-- Avatar -->
         <div style="position: relative; width: 120px; height: 120px; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center;">
@@ -37,8 +42,23 @@
             {{ $user->profile_status ?: 'Статус не встановлено' }}
         </div>
 
-        <div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;">
-            онлайн <i class="fas fa-chevron-right" style="font-size: 0.7rem; margin-left: 2px;"></i>
+        <div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: center; gap: 1rem;">
+            <span>онлайн <i class="fas fa-chevron-right" style="font-size: 0.7rem; margin-left: 2px;"></i></span>
+            
+            <div style="display: flex; align-items: center; gap: 0.3rem; background: var(--bg-dark); padding: 0.2rem 0.5rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); cursor: pointer;" onclick="navigator.clipboard.writeText('{{ $user->id }}'); const icon = this.querySelector('.fa-copy'); icon.classList.remove('far', 'fa-copy'); icon.classList.add('fas', 'fa-check', 'text-success'); setTimeout(() => { icon.classList.remove('fas', 'fa-check', 'text-success'); icon.classList.add('far', 'fa-copy'); }, 2000);" title="Натисніть, щоб скопіювати ваш ID">
+                <span style="font-weight: bold;">ID: {{ $user->id }}</span>
+                <i class="far fa-copy" style="font-size: 0.75rem;"></i>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.8rem;" title="Кількість вподобань та дизлайків на ваших коментарях">
+                <div style="display: flex; align-items: center; gap: 0.3rem;">
+                    <i class="fas fa-chevron-up" style="color: #2ecc71;"></i>
+                    <span style="font-weight: bold; color: #2ecc71;">{{ $user->positive_votes }}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.3rem;">
+                    <i class="fas fa-chevron-down" style="color: #e74c3c;"></i>
+                    <span style="font-weight: bold; color: #e74c3c;">{{ $user->negative_votes }}</span>
+                </div>
+            </div>
         </div>
 
         <!-- Stats Row -->
@@ -136,9 +156,9 @@
                         @endif
 
                         <div style="padding: 1rem; flex: 1;">
-                            <h4 style="font-weight: 600; margin-bottom: 0.5rem; font-size: 1rem;">
+                            <h4 style="font-weight: 600; margin-bottom: 0.5rem; font-size: 1rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.3;" title="{{ $history->anime->title ?? '' }}">
                                 @if($history->anime)
-                                    <a href="{{ route('anime.show', ['anime' => $history->anime->id, 'ep' => $history->episode_id]) }}">
+                                    <a href="{{ route('anime.show', ['anime' => $history->anime->id, 'ep' => $history->episode_id]) }}" style="color: inherit; text-decoration: none;">
                                         {{ $history->anime->title }}
                                     </a>
                                 @else

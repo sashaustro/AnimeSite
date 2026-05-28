@@ -25,7 +25,39 @@ class User extends Authenticatable
         'password',
         'avatar',
         'profile_status',
+        'reputation',
+        'muted_until',
+        'mute_reason'
     ];
+
+    public function comment_votes()
+    {
+        return $this->hasMany(CommentVote::class);
+    }
+
+    public function reports()
+    {
+        return $this->hasMany(Report::class);
+    }
+
+    public function getPositiveVotesAttribute()
+    {
+        return \App\Models\CommentVote::whereHas('comment', function($query) {
+            $query->where('user_id', $this->id);
+        })->where('vote', 1)->count();
+    }
+
+    public function getNegativeVotesAttribute()
+    {
+        return \App\Models\CommentVote::whereHas('comment', function($query) {
+            $query->where('user_id', $this->id);
+        })->where('vote', -1)->count();
+    }
+
+    public function isMuted()
+    {
+        return $this->muted_until && $this->muted_until->isFuture();
+    }
 
     /**
      * The attributes that should be hidden for serialization.
@@ -47,6 +79,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'muted_until' => 'datetime',
         ];
     }
 

@@ -35,7 +35,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/anime/{anime}/ratings', [\App\Http\Controllers\RatingController::class, 'store'])->name('ratings.store');
     Route::delete('/anime/{anime}/ratings', [\App\Http\Controllers\RatingController::class, 'destroy'])->name('ratings.destroy');
     Route::post('/anime/{anime}/comments', [\App\Http\Controllers\CommentController::class, 'store'])->name('comments.store');
+    Route::put('/comments/{comment}', [\App\Http\Controllers\CommentController::class, 'update'])->name('comments.update');
     Route::delete('/comments/{comment}', [\App\Http\Controllers\CommentController::class, 'destroy'])->name('comments.destroy');
+    Route::post('/comments/{comment}/vote', [\App\Http\Controllers\CommentController::class, 'vote'])->name('comments.vote');
+    Route::post('/reports', [\App\Http\Controllers\ReportController::class, 'store'])->name('reports.store');
 });
 
 // Публічний профіль
@@ -52,6 +55,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     // Користувачі
     Route::get('/users', [\App\Http\Controllers\Admin\UserController::class, 'index'])->name('admin.users.index');
     Route::post('/users/{user}/toggle-role', [\App\Http\Controllers\Admin\UserController::class, 'toggleRole'])->name('admin.users.toggle_role');
+    Route::post('/users/{user}/mute', [\App\Http\Controllers\Admin\ReportController::class, 'mute'])->name('admin.users.mute');
+    Route::post('/users/{user}/unmute', [\App\Http\Controllers\Admin\ReportController::class, 'unmute'])->name('admin.users.unmute');
+
+    // Скарги
+    Route::get('/reports', [\App\Http\Controllers\Admin\ReportController::class, 'index'])->name('admin.reports.index');
+    Route::post('/reports/{report}/resolve', [\App\Http\Controllers\Admin\ReportController::class, 'resolve'])->name('admin.reports.resolve');
+    Route::delete('/reports/{report}', [\App\Http\Controllers\Admin\ReportController::class, 'destroy'])->name('admin.reports.destroy');
 
     // Жанри
     Route::resource('genres', \App\Http\Controllers\Admin\GenreController::class)->except(['show'])->names([

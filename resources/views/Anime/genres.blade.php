@@ -4,6 +4,11 @@
 
 @section('content')
 <div class="container">
+    <div class="breadcrumb" style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+        <a href="{{ route('home') }}" style="color: var(--text-muted); text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='var(--accent-color)'" onmouseout="this.style.color='var(--text-muted)'">AniHub</a>
+        <i class="fas fa-chevron-right" style="font-size: 0.7rem; color: #555;"></i>
+        <span style="color: var(--text-primary); font-weight: 600;">Жанри</span>
+    </div>
     <h2 class="section-title">Каталог за жанрами</h2>
     <p style="color: var(--text-muted); margin-bottom: 2rem;">Тут будуть представлені жанри. Поки що ви можете переглянути повний каталог.</p>
 
@@ -25,7 +30,7 @@
             <a href="{{ route('anime.show', $anime->id) }}" class="anime-card">
             <div style="position: relative;">
                 @if($anime->image)
-                    <img src="{{ asset('storage/' . $anime->image) }}" alt="{{ $anime->title }}" class="anime-poster">
+                    <img src="{{ asset('storage/' . $anime->image) }}" alt="{{ $anime->title }}" class="anime-poster" loading="lazy">
                 @else
                     <div class="anime-poster" style="background-color: #252529; display: flex; align-items: center; justify-content: center; color: #666;">Немає постера</div>
                 @endif
@@ -42,16 +47,16 @@
                         $statusText = '';
                         if($userList) {
                             switch($userList->status) {
-                                case 'watching': $barColor = '#2ecc71'; $statusText = 'Переглядаю'; break;
-                                case 'plan_to_watch': $barColor = '#9b59b6'; $statusText = 'В планах'; break;
-                                case 'completed': $barColor = '#3498db'; $statusText = 'Переглянуто'; break;
-                                case 'on_hold': $barColor = '#f1c40f'; $statusText = 'Відкладено'; break;
-                                case 'dropped': $barColor = '#e74c3c'; $statusText = 'Кинуто'; break;
+                                case 'watching': $barColor = 'rgba(46, 204, 113, 0.50)'; $statusText = 'Переглядаю'; break;
+                                case 'plan_to_watch': $barColor = 'rgba(155, 89, 182, 0.50)'; $statusText = 'В планах'; break;
+                                case 'completed': $barColor = 'rgba(52, 152, 219, 0.50)'; $statusText = 'Переглянуто'; break;
+                                case 'on_hold': $barColor = 'rgba(241, 196, 15, 0.50)'; $statusText = 'Відкладено'; break;
+                                case 'dropped': $barColor = 'rgba(231, 76, 60, 0.50)'; $statusText = 'Кинуто'; break;
                             }
                         }
                     @endphp
                     @if($userList && $statusText)
-                        <div style="position: absolute; bottom: 0; left: 0; width: 100%; background-color: {{ $barColor }}; color: white; text-align: center; font-size: 0.75rem; padding: 3px 0; font-weight: 600; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
+                        <div style="position: absolute; bottom: 0; left: 0; width: 100%; background-color: {{ $barColor }}; backdrop-filter: blur(4px); color: white; text-align: center; font-size: 0.75rem; padding: 3px 0; font-weight: 600; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
                             {{ mb_strtoupper($statusText) }}
                         </div>
                     @endif
@@ -73,14 +78,85 @@
             </a>
         @empty
             <div style="grid-column: 1 / -1; text-align: center; padding: 50px; color: var(--text-muted);">
-                <h2>Каталог порожній...</h2>
+                <h2>На даний момент нічого ще не додано.</h2>
             </div>
         @endforelse
     </div>
 
     <!-- Pagination -->
-    <div style="margin-top: 3rem;">
+    @if($animes->hasMorePages())
+        <div class="infinite-scroll-trigger" data-next-page="{{ $animes->nextPageUrl() }}" style="text-align: center; padding: 2rem; color: var(--accent-color);">
+            <i class="fas fa-spinner fa-spin fa-2x"></i>
+        </div>
+    @endif
+    <div style="display: none;" class="pagination-wrapper">
         {{ $animes->links() }}
     </div>
 </div>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        let isFetchingNextPage = false;
+        let infiniteObserver = null;
+
+        function setupInfiniteScroll() {
+            if (infiniteObserver) {
+                infiniteObserver.disconnect();
+            }
+
+            const trigger = document.querySelector('.infinite-scroll-trigger');
+            if (!trigger) return;
+
+            infiniteObserver = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting && !isFetchingNextPage) {
+                    loadNextPage(trigger.dataset.nextPage);
+                }
+            }, { rootMargin: '300px' });
+
+            infiniteObserver.observe(trigger);
+        }
+
+        function loadNextPage(url) {
+            if (!url) return;
+            isFetchingNextPage = true;
+            
+            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(res => res.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    
+                    const newItems = doc.querySelectorAll('.anime-card');
+                    const grid = document.querySelector('.anime-grid');
+                    if(grid) {
+                        newItems.forEach(item => grid.appendChild(item));
+                    }
+                    
+                    const newTrigger = doc.querySelector('.infinite-scroll-trigger');
+                    const oldTrigger = document.querySelector('.infinite-scroll-trigger');
+                    
+                    if (newTrigger && oldTrigger) {
+                        oldTrigger.dataset.nextPage = newTrigger.dataset.nextPage;
+                    } else if (oldTrigger) {
+                        oldTrigger.remove();
+                    }
+                    
+                    const newPagination = doc.querySelector('.pagination-wrapper');
+                    const oldPagination = document.querySelector('.pagination-wrapper');
+                    if (newPagination && oldPagination) {
+                        oldPagination.innerHTML = newPagination.innerHTML;
+                    }
+                    
+                    isFetchingNextPage = false;
+                })
+                .catch(() => {
+                    isFetchingNextPage = false;
+                });
+        }
+
+        setupInfiniteScroll();
+    });
+</script>
+@endpush
 @endsection

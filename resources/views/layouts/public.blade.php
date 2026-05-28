@@ -13,17 +13,51 @@
     <!-- CSS -->
     <link href="{{ asset('css/style.css') }}" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     @stack('styles')
+    <style>
+        .scroll-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 45px;
+            height: 45px;
+            background-color: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+        .scroll-to-top.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .scroll-to-top:hover {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+            color: #fff;
+            transform: translateY(-3px);
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar">
         <a href="{{ route('home') }}" class="nav-brand">ANI<span>HUB</span></a>
 
-        <div class="nav-links">
-            <a href="{{ route('home') }}" class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}">Аніме</a>
-            <a href="{{ route('anime.genres') }}" class="nav-link {{ request()->routeIs('anime.genres') ? 'active' : '' }}">Жанри</a>
-            <a href="{{ route('anime.ongoing') }}" class="nav-link {{ request()->routeIs('anime.ongoing') ? 'active' : '' }}">Онгоїнги</a>
-            <a href="{{ route('anime.top') }}" class="nav-link {{ request()->routeIs('anime.top') ? 'active' : '' }}">Топ рейтингу</a>
+        <div class="nav-pills-container">
+            <a href="{{ route('home') }}" class="nav-pill {{ request()->routeIs('home') ? 'active' : '' }}">Аніме</a>
+            <a href="{{ route('anime.genres') }}" class="nav-pill {{ request()->routeIs('anime.genres') ? 'active' : '' }}">Жанри</a>
+            <a href="{{ route('anime.ongoing') }}" class="nav-pill {{ request()->routeIs('anime.ongoing') ? 'active' : '' }}">Онгоїнги</a>
+            <a href="{{ route('anime.top') }}" class="nav-pill {{ request()->routeIs('anime.top') ? 'active' : '' }}">Топ рейтингу</a>
         </div>
 
         <div class="nav-links" style="gap: 0.8rem;">
@@ -73,8 +107,8 @@
 
             @auth
                 @if(auth()->user()->isAdmin())
-                    <div style="position: relative; display: inline-block;" onmouseenter="this.querySelector('.dropdown-wrapper').style.display='block'" onmouseleave="this.querySelector('.dropdown-wrapper').style.display='none'">
-                        <button class="btn btn-outline" style="font-size: 0.8rem; padding: 0.3rem 0.8rem; display: flex; align-items: center; gap: 5px;">
+                    <div style="position: relative; display: flex; align-items: center;" onmouseenter="this.querySelector('.dropdown-wrapper').style.display='block'" onmouseleave="this.querySelector('.dropdown-wrapper').style.display='none'">
+                        <button class="btn btn-outline" style="font-size: 0.85rem; padding: 0 1.2rem; height: 36px; display: flex; align-items: center; justify-content: center; gap: 5px; box-sizing: border-box; margin: 0;">
                             Адмін <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </button>
                         <div class="dropdown-wrapper" style="display: none; position: absolute; right: 0; top: 100%; padding-top: 15px; z-index: 9999; min-width: 200px;">
@@ -86,12 +120,12 @@
                         </div>
                     </div>
                 @endif
-                <a href="{{ route('cabinet.collections') }}" class="btn btn-outline" style="font-size: 0.8rem; padding: 0.3rem 0.8rem;" title="Мої колекції"><i class="fas fa-layer-group"></i> Колекції</a>
-                <a href="{{ route('cabinet.lists') }}" class="btn btn-outline" style="font-size: 0.8rem; padding: 0.3rem 0.8rem;" title="Мої списки"><i class="fas fa-bookmark"></i> Закладки</a>
-                <a href="{{ route('cabinet') }}" class="btn btn-outline" style="font-size: 0.8rem; padding: 0.3rem 0.8rem;">Кабінет</a>
-                <form method="POST" action="{{ route('logout') }}" style="display:inline;">
+                <a href="{{ route('cabinet.collections') }}" class="btn btn-outline" style="font-size: 0.85rem; padding: 0 1.2rem; height: 36px; display: flex; align-items: center; justify-content: center; gap: 5px; box-sizing: border-box; margin: 0;" title="Мої колекції"><i class="fas fa-layer-group"></i> Колекції</a>
+                <a href="{{ route('cabinet.lists') }}" class="btn btn-outline" style="font-size: 0.85rem; padding: 0 1.2rem; height: 36px; display: flex; align-items: center; justify-content: center; gap: 5px; box-sizing: border-box; margin: 0;" title="Мої списки"><i class="fas fa-bookmark"></i> Закладки</a>
+                <a href="{{ route('cabinet') }}" class="btn btn-outline" style="font-size: 0.85rem; padding: 0 1.2rem; height: 36px; display: flex; align-items: center; justify-content: center; gap: 5px; box-sizing: border-box; margin: 0;">Кабінет</a>
+                <form method="POST" action="{{ route('logout') }}" style="display: flex; align-items: center; margin: 0;">
                     @csrf
-                    <button type="submit" class="btn btn-primary" style="font-size: 0.8rem; padding: 0.3rem 0.8rem;">Вийти</button>
+                    <button type="submit" class="btn btn-primary" style="font-size: 0.85rem; padding: 0 1.2rem; height: 36px; display: flex; align-items: center; justify-content: center; gap: 5px; box-sizing: border-box; margin: 0;">Вийти</button>
                 </form>
             @else
                 @if (Route::has('login'))
@@ -115,8 +149,54 @@
     </main>
 
     @stack('scripts')
+    <!-- Scroll to Top Button -->
+    <button id="scrollToTopBtn" class="scroll-to-top" title="Вгору">
+        <i class="fas fa-chevron-up"></i>
+    </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Nav Pills Sliding Indicator
+            const pillsContainer = document.querySelector('.nav-pills-container');
+            const pills = document.querySelectorAll('.nav-pill');
+            
+            if (pillsContainer && pills.length > 0) {
+                let indicator = document.createElement('div');
+                indicator.className = 'nav-pill-indicator';
+                pillsContainer.appendChild(indicator);
+
+                const activePill = document.querySelector('.nav-pill.active') || pills[0];
+                
+                function moveIndicator(el) {
+                    if (!el) return;
+                    indicator.style.width = `${el.offsetWidth}px`;
+                    indicator.style.transform = `translateX(${el.offsetLeft}px)`;
+                }
+                
+                // Initialize position instantly
+                indicator.style.transition = 'none';
+                moveIndicator(activePill);
+                setTimeout(() => {
+                    indicator.style.transition = '';
+                }, 50);
+                
+                pills.forEach(pill => {
+                    pill.addEventListener('mouseenter', function() {
+                        moveIndicator(this);
+                    });
+                });
+                
+                pillsContainer.addEventListener('mouseleave', function() {
+                    moveIndicator(activePill);
+                });
+                
+                window.addEventListener('resize', function() {
+                    moveIndicator(activePill);
+                });
+            }
+
+            // Search Toggle Logic
             const toggleBtn = document.getElementById('navSearchToggle');
             const searchForm = document.getElementById('navSearchForm');
             const searchInput = document.getElementById('navSearchInput');
@@ -146,6 +226,32 @@
                     }
                 });
             }
+
+            // Scroll to Top Logic
+            const scrollToTopBtn = document.getElementById('scrollToTopBtn');
+            if (scrollToTopBtn) {
+                window.addEventListener('scroll', function() {
+                    if (window.scrollY > 500) {
+                        scrollToTopBtn.classList.add('show');
+                    } else {
+                        scrollToTopBtn.classList.remove('show');
+                    }
+                });
+
+                scrollToTopBtn.addEventListener('click', function() {
+                    window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                    });
+                });
+            }
+
+            // Force reload when navigating back to fix stale status data
+            window.addEventListener('pageshow', function(event) {
+                if (event.persisted) {
+                    window.location.reload();
+                }
+            });
         });
     </script>
 </body>

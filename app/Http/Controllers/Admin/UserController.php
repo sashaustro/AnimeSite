@@ -14,7 +14,8 @@ class UserController extends Controller
 
         if ($request->filled('search')) {
             $query->where(function($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%')
+                $q->where('id', $request->search)
+                  ->orWhere('name', 'like', '%' . $request->search . '%')
                   ->orWhere('username', 'like', '%' . $request->search . '%')
                   ->orWhere('email', 'like', '%' . $request->search . '%');
             });
@@ -24,7 +25,7 @@ class UserController extends Controller
             $query->where('role', $request->role);
         }
 
-        $users = $query->orderBy('id', 'desc')->paginate(20)->appends($request->all());
+        $users = $query->orderBy('role', 'asc')->orderBy('id', 'desc')->paginate(20)->appends($request->all());
         return view('admin.users.index', compact('users'));
     }
 

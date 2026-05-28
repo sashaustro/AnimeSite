@@ -45,6 +45,13 @@
     }
 </style>
 <div class="container">
+    <div class="breadcrumb" style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+        <a href="{{ route('home') }}" style="color: var(--text-muted); text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='var(--accent-color)'" onmouseout="this.style.color='var(--text-muted)'">AniHub</a>
+        <i class="fas fa-chevron-right" style="font-size: 0.7rem; color: #555;"></i>
+        <a href="{{ route('cabinet') }}" style="color: var(--text-muted); text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='var(--accent-color)'" onmouseout="this.style.color='var(--text-muted)'">Кабінет</a>
+        <i class="fas fa-chevron-right" style="font-size: 0.7rem; color: #555;"></i>
+        <span style="color: var(--text-primary); font-weight: 600;">Мої колекції</span>
+    </div>
     <div style="display: flex; align-items: center; margin-bottom: 2rem;">
         <h2 class="section-title" style="margin-bottom: 0;">Мої колекції</h2>
         <a href="{{ route('cabinet') }}" class="btn btn-outline" style="margin-left: auto;">В кабінет</a>

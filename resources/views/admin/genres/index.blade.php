@@ -88,7 +88,7 @@
         <table class="table table-hover align-middle mb-0">
             <thead class="bg-light">
                 <tr>
-                    <th class="border-0">ID</th>
+                    <th class="border-0">№</th>
                     <th class="border-0">Назва</th>
                     <th class="border-0 text-right">Дії</th>
                 </tr>
@@ -96,7 +96,7 @@
             <tbody>
                 @forelse($genres as $genre)
                     <tr>
-                        <td><strong>{{ $genre->id }}</strong></td>
+                        <td><strong>{{ $loop->iteration }}</strong></td>
                         <td>{{ $genre->name }}</td>
                         <td class="text-right">
                             <form action="{{ route('admin.genres.destroy', $genre->id) }}" method="POST" style="display: inline-block;">

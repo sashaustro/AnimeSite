@@ -4,9 +4,14 @@
 
 @section('content')
 <div class="container">
-    <a href="{{ url()->previous() }}" style="color: var(--text-muted); text-decoration: none; display: inline-block; margin-bottom: 1.5rem; font-size: 0.9rem;">
-        &larr; Назад
-    </a>
+    <div class="breadcrumb" style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+        <a href="{{ route('home') }}" style="color: var(--text-muted); text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='var(--accent-color)'" onmouseout="this.style.color='var(--text-muted)'">AniHub</a>
+        <i class="fas fa-chevron-right" style="font-size: 0.7rem; color: #555;"></i>
+        <span style="color: var(--text-muted);">Користувачі</span>
+        <i class="fas fa-chevron-right" style="font-size: 0.7rem; color: #555;"></i>
+        <span style="color: var(--text-primary); font-weight: 600;">{{ $user->username }}</span>
+    </div>
+
 
     <!-- Шапка профілю -->
     <div class="profile-header" style="display: flex; flex-direction: column; align-items: center; margin-bottom: 2.5rem; text-align: center;">
@@ -28,6 +33,13 @@
                 @if($user->role == 'admin')
                     <span style="position: absolute; left: 100%; margin-left: 0.5rem; background: #e74c3c; color: white; font-size: 0.7rem; padding: 0.1rem 0.4rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); display: inline-flex; align-items: center; justify-content: center;">Admin</span>
                 @endif
+            </div>
+        </div>
+        
+        <div style="display: flex; justify-content: center; margin-bottom: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.3rem; background: var(--bg-card); padding: 0.2rem 0.5rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); cursor: pointer;" onclick="navigator.clipboard.writeText('{{ $user->id }}'); const icon = this.querySelector('.fa-copy'); icon.classList.remove('far', 'fa-copy'); icon.classList.add('fas', 'fa-check', 'text-success'); setTimeout(() => { icon.classList.remove('fas', 'fa-check', 'text-success'); icon.classList.add('far', 'fa-copy'); }, 2000);" title="Натисніть, щоб скопіювати ID">
+                <span style="font-size: 0.85rem; font-weight: bold; color: var(--text-muted);">ID: {{ $user->id }}</span>
+                <i class="far fa-copy" style="font-size: 0.75rem; color: var(--text-muted);"></i>
             </div>
         </div>
         

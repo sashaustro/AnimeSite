@@ -4,6 +4,13 @@
 
 @section('content')
 <div class="container">
+    <div class="breadcrumb" style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+        <a href="{{ route('home') }}" style="color: var(--text-muted); text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='var(--accent-color)'" onmouseout="this.style.color='var(--text-muted)'">AniHub</a>
+        <i class="fas fa-chevron-right" style="font-size: 0.7rem; color: #555;"></i>
+        <a href="{{ route('cabinet') }}" style="color: var(--text-muted); text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='var(--accent-color)'" onmouseout="this.style.color='var(--text-muted)'">Кабінет</a>
+        <i class="fas fa-chevron-right" style="font-size: 0.7rem; color: #555;"></i>
+        <span style="color: var(--text-primary); font-weight: 600;">Мої списки</span>
+    </div>
     <div style="display: flex; align-items: center; margin-bottom: 2rem;">
         <h2 class="section-title" style="margin-bottom: 0;">Мої списки</h2>
         <a href="{{ route('cabinet') }}" class="btn btn-outline" style="margin-left: auto;">В кабінет</a>
@@ -92,15 +99,15 @@
                                 $barColor = 'transparent';
                                 $statusText = '';
                                 switch($list->status) {
-                                    case 'watching': $barColor = '#2ecc71'; $statusText = 'Переглядаю'; break;
-                                    case 'plan_to_watch': $barColor = '#9b59b6'; $statusText = 'В планах'; break;
-                                    case 'completed': $barColor = '#3498db'; $statusText = 'Переглянуто'; break;
-                                    case 'on_hold': $barColor = '#f1c40f'; $statusText = 'Відкладено'; break;
-                                    case 'dropped': $barColor = '#e74c3c'; $statusText = 'Кинуто'; break;
+                                    case 'watching': $barColor = 'rgba(46, 204, 113, 0.50)'; $statusText = 'Переглядаю'; break;
+                                    case 'plan_to_watch': $barColor = 'rgba(155, 89, 182, 0.50)'; $statusText = 'В планах'; break;
+                                    case 'completed': $barColor = 'rgba(52, 152, 219, 0.50)'; $statusText = 'Переглянуто'; break;
+                                    case 'on_hold': $barColor = 'rgba(241, 196, 15, 0.50)'; $statusText = 'Відкладено'; break;
+                                    case 'dropped': $barColor = 'rgba(231, 76, 60, 0.50)'; $statusText = 'Кинуто'; break;
                                 }
                             @endphp
                             @if($statusText && $list->status != 'favorites')
-                                <div style="position: absolute; bottom: 0; left: 0; width: 100%; background-color: {{ $barColor }}; color: white; text-align: center; font-size: 0.75rem; padding: 3px 0; font-weight: 600; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
+                                <div style="position: absolute; bottom: 0; left: 0; width: 100%; background-color: {{ $barColor }}; backdrop-filter: blur(4px); color: white; text-align: center; font-size: 0.75rem; padding: 3px 0; font-weight: 600; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
                                     {{ mb_strtoupper($statusText) }}
                                 </div>
                             @endif

@@ -73,13 +73,44 @@ a:hover {
     align-items: center;
 }
 
-.nav-link {
-    font-weight: 500;
-    font-size: 0.95rem;
+.nav-pills-container {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 30px;
+    padding: 0.3rem;
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    position: relative;
 }
 
-.nav-link.active {
-    color: var(--accent-color);
+.nav-pill {
+    padding: 0.5rem 1.2rem;
+    border-radius: 25px;
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    transition: color 0.3s ease;
+    text-decoration: none;
+    position: relative;
+    z-index: 2;
+}
+
+.nav-pill:hover, .nav-pill.active {
+    color: #fff;
+}
+
+.nav-pill-indicator {
+    position: absolute;
+    top: 0.3rem;
+    left: 0;
+    height: calc(100% - 0.6rem);
+    background: var(--primary-color, #a855f7);
+    border-radius: 25px;
+    box-shadow: 0 4px 10px rgba(168, 85, 247, 0.3);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
+    pointer-events: none;
 }
 
 /* Buttons */
@@ -160,7 +191,7 @@ a:hover {
 
 /* Grid & Cards */
 .container {
-    max-width: 1200px;
+    max-width: 1500px;
     margin: 0 auto;
     padding: 2rem;
 }
@@ -252,6 +283,7 @@ a:hover {
     display: grid;
     grid-template-columns: 300px 1fr;
     gap: 2rem;
+    align-items: start;
 }
 
 @media (max-width: 768px) {
@@ -400,4 +432,25 @@ a:hover {
 .collection-checkbox:checked {
     background-color: var(--accent-color);
     border-color: var(--accent-color);
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: var(--bg-dark);
+}
+::-webkit-scrollbar-thumb {
+    background: #4a4d5c;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #6c7287;
+}
+
+html {
+    scrollbar-width: thin;
+    scrollbar-color: #4a4d5c var(--bg-dark);
 }

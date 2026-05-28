@@ -19,8 +19,28 @@
                         <input type="text" class="form-control" name="title" required placeholder="Введіть назву">
                     </div>
                     <div class="form-group">
+                        <label>Оригінальна назва (Romaji / English / Japanese)</label>
+                        <input type="text" class="form-control" name="original_title" placeholder="Наприклад: Yuusha no Kuzu (необов'язково)">
+                    </div>
+                    <div class="form-group">
                         <label>Опис</label>
                         <textarea name="description" class="form-control" rows="5" style="min-height: 120px; resize: vertical;" placeholder="Введіть опис"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Автор</label>
+                        <input type="text" class="form-control" name="author" placeholder="Введіть автора (необов'язково)" value="">
+                    </div>
+                    <div class="form-group">
+                        <label>Першоджерело</label>
+                        <input type="text" list="sources" class="form-control" name="source" placeholder="—" value="">
+                        <datalist id="sources">
+                            <option value="Манга">
+                            <option value="Ранобе">
+                            <option value="Оригінал">
+                            <option value="Візуальна новела">
+                            <option value="Гра">
+                            <option value="Манхва">
+                        </datalist>
                     </div>
                     <div class="form-group">
                         <label>Постер (Зображення)</label>
@@ -57,11 +77,51 @@
                             </optgroup>
                         </select>
                     </div>
+
+                    <div class="form-group">
+                        <label>Пора року (Сезон)</label>
+                        <select name="season" class="form-control">
+                            <option value="">— (Не вказано)</option>
+                            <option value="Зима">Зима</option>
+                            <option value="Весна">Весна</option>
+                            <option value="Літо">Літо</option>
+                            <option value="Осінь">Осінь</option>
+                        </select>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Загальна кількість епізодів</label>
+                                <input type="number" class="form-control" name="total_episodes" placeholder="Наприклад: 12, 24..." min="1" value="">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Тривалість (хвилин)</label>
+                                <input type="text" class="form-control" name="duration" placeholder="Наприклад: 24 хв" value="">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>День виходу (для онгоїнгів)</label>
+                        <select name="broadcast_day" class="form-control">
+                            <option value="">— (Не вказано)</option>
+                            <option value="Понеділок">Понеділок</option>
+                            <option value="Вівторок">Вівторок</option>
+                            <option value="Середа">Середа</option>
+                            <option value="Четвер">Четвер</option>
+                            <option value="П'ятниця">П'ятниця</option>
+                            <option value="Субота">Субота</option>
+                            <option value="Неділя">Неділя</option>
+                        </select>
+                    </div>
+
                     <div class="form-group">
                         <label>Формат</label>
-                        <input type="text" list="formats" class="form-control" name="format" placeholder="Серіал, Фільм, OVA" value="Невідомо">
+                        <input type="text" list="formats" class="form-control" name="format" placeholder="—" value="">
                         <datalist id="formats">
-                            <option value="Невідомо">
                             <option value="TV Серіал">
                             <option value="Фільм">
                             <option value="OVA">
@@ -71,9 +131,8 @@
                     </div>
                     <div class="form-group">
                         <label>Країна</label>
-                        <input type="text" list="countries" class="form-control" name="country" placeholder="Японія, Китай, Корея" value="Невідомо">
+                        <input type="text" list="countries" class="form-control" name="country" placeholder="—" value="">
                         <datalist id="countries">
-                            <option value="Невідомо">
                             <option value="Японія">
                             <option value="Південна Корея">
                             <option value="Китай">
@@ -82,9 +141,8 @@
                     </div>
                     <div class="form-group">
                         <label>Студія</label>
-                        <input type="text" list="studios" class="form-control" name="studio" placeholder="Mappa, Ufotable, etc." value="Невідомо">
+                        <input type="text" list="studios" class="form-control" name="studio" placeholder="—" value="">
                         <datalist id="studios">
-                            <option value="Невідомо">
                             <option value="Mappa">
                             <option value="Ufotable">
                             <option value="Kyoto Animation">
@@ -118,6 +176,7 @@
                                 <span id="selectedGenresText">Виберіть жанри...</span>
                             </button>
                             <div class="dropdown-menu w-100 p-3 shadow" aria-labelledby="genresDropdown" style="max-height: 250px; overflow-y: auto;" onclick="event.stopPropagation()">
+                                <input type="text" id="genreSearch" class="form-control mb-3" placeholder="Пошук жанру..." onclick="event.stopPropagation()">
                                 <div class="row">
                                     @foreach($genres as $genre)
                                     <div class="col-md-4 col-sm-6 mb-2">
@@ -158,6 +217,22 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             selectedText.textContent = `Вибрано жанрів: ${selected.length}`;
         }
+    }
+
+    const genreSearch = document.getElementById('genreSearch');
+    if (genreSearch) {
+        genreSearch.addEventListener('input', function() {
+            const filter = this.value.toLowerCase();
+            checkboxes.forEach(cb => {
+                const label = cb.dataset.name.toLowerCase();
+                const container = cb.closest('.col-md-4');
+                if (label.includes(filter)) {
+                    container.style.display = '';
+                } else {
+                    container.style.display = 'none';
+                }
+            });
+        });
     }
 
     checkboxes.forEach(cb => cb.addEventListener('change', updateSelectedGenres));
