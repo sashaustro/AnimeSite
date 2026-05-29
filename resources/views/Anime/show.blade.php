@@ -496,26 +496,28 @@
             </div>
 
             @if(isset($similarAnimes) && $similarAnimes->count() > 0)
-            <div style="margin-top: 2rem;">
-                <h3 style="margin-bottom: 1rem;">Схожі за жанрами</h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1rem;">
-                    @foreach($similarAnimes as $similar)
-                        <a href="{{ route('anime.show', $similar->id) }}" style="text-decoration: none; color: var(--text-color);">
-                            <div style="background: var(--bg-card); border-radius: var(--radius-md); overflow: hidden; transition: transform 0.2s; position: relative;">
-                                @if($similar->image)
-                                    <img src="{{ asset('storage/' . $similar->image) }}" alt="{{ $similar->title }}" style="width: 100%; height: 200px; object-fit: cover; display: block;">
+            <div style="margin-top: 2rem; background: var(--bg-dark); padding: 1rem; border-radius: var(--radius-lg);">
+                <h3 style="margin-top: 0; margin-bottom: 1rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem; font-size: 1.1rem;">
+                    <i class="fas fa-layer-group" style="font-size: 1rem; color: var(--text-muted);"></i> Схожі за жанрами
+                </h3>
+                <div class="anime-grid">
+                    @foreach($similarAnimes as $item)
+                        <a href="{{ route('anime.show', $item->id) }}" class="anime-card">
+                            <div style="position: relative;">
+                                @if($item->image)
+                                    <img src="{{ asset('storage/' . $item->image) }}" alt="{{ $item->title }}" class="anime-poster" loading="lazy">
                                 @else
-                                    <div style="width: 100%; height: 200px; background: #333; display: flex; align-items: center; justify-content: center;">Немає</div>
+                                    <div class="anime-poster" style="background-color: #252529; display: flex; align-items: center; justify-content: center; color: #666;">Немає постера</div>
                                 @endif
 
                                 <div class="rating-badge">
                                     <i class="fas fa-star" style="font-size: 0.7rem;"></i>
-                                    {{ $similar->ratings->count() > 0 ? number_format($similar->ratings->avg('score'), 1) : '0.0' }}
+                                    {{ $item->ratings->count() > 0 ? number_format($item->ratings->avg('score'), 1) : '0.0' }}
                                 </div>
-
+                                
                                 @auth
                                     @php
-                                        $userList = $similar->userLists->where('user_id', auth()->id())->first();
+                                        $userList = $item->userLists->where('user_id', auth()->id())->first();
                                         $barColor = 'transparent';
                                         $statusText = '';
                                         if($userList) {
@@ -529,14 +531,23 @@
                                         }
                                     @endphp
                                     @if($userList && $statusText)
-                                        <div style="position: absolute; bottom: 33px; left: 0; width: 100%; background-color: {{ $barColor }}; backdrop-filter: blur(4px); color: white; text-align: center; font-size: 0.75rem; padding: 3px 0; font-weight: 600; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
+                                        <div style="position: absolute; bottom: 0; left: 0; width: 100%; background-color: {{ $barColor }}; backdrop-filter: blur(4px); color: white; text-align: center; font-size: 0.75rem; padding: 3px 0; font-weight: 600; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
                                             {{ mb_strtoupper($statusText) }}
                                         </div>
                                     @endif
                                 @endauth
-
-                                <div style="padding: 0.5rem; font-size: 0.9rem; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: var(--bg-card);">
-                                    {{ $similar->title }}
+                            </div>
+                            <div class="anime-info">
+                                <h3 class="anime-title" title="{{ $item->title }}">{{ $item->title }}</h3>
+                                <div class="anime-meta">
+                                    <span>
+                                        @if($item->genres->count() > 0)
+                                            {{ $item->genres->first()->name }}
+                                        @else
+                                            Жанр
+                                        @endif
+                                    </span>
+                                    <span>Серія {{ $item->episodes->count() }}</span>
                                 </div>
                             </div>
                         </a>
@@ -545,7 +556,7 @@
             </div>
             @endif
 
-            <div id="comments-section" style="margin-top: 2rem; background: var(--bg-dark); padding: 1.5rem; border-radius: var(--radius-lg); max-width: 850px; margin-left: auto; margin-right: auto;">
+            <div id="comments-section" style="margin-top: 2rem; background: var(--bg-dark); padding: 1.5rem; border-radius: var(--radius-lg);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
                     <h3 style="margin: 0; color: var(--text-primary);">Коментарі <span style="color: var(--text-muted); font-size: 1rem; margin-left: 5px;">{{ $commentsList->count() }}</span></h3>
                     <div style="display: flex; background: var(--bg-card); border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color);">

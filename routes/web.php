@@ -9,6 +9,7 @@ use App\Http\Controllers\EpisodeController;
 // 1. ПУБЛІЧНІ (Без авторизації)
 Route::get('/', [AnimeController::class, 'index'])->name('home');
 Route::get('/genres', [AnimeController::class, 'genres'])->name('anime.genres');
+Route::get('/genres/{id}', [AnimeController::class, 'genreShow'])->name('anime.genre.show');
 Route::get('/ongoing', [AnimeController::class, 'ongoing'])->name('anime.ongoing');
 Route::get('/top', [AnimeController::class, 'top'])->name('anime.top');
 Route::get('/anime/{anime}', [AnimeController::class, 'show'])->name('anime.show');

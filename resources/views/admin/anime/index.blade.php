@@ -158,8 +158,8 @@
                                     <span class="badge badge-secondary">Немає</span>
                                 @endif
                             </td>
-                            <td>
-                                <a href="{{ route('anime.show', $anime->id) }}" target="_blank" class="text-dark font-weight-bold" onclick="event.stopPropagation()">
+                            <td style="max-width: 250px;">
+                                <a href="{{ route('anime.show', $anime->id) }}" target="_blank" class="text-dark font-weight-bold d-block text-truncate" onclick="event.stopPropagation()" title="{{ $anime->title }}">
                                     {{ $anime->title }}
                                 </a>
                             </td>

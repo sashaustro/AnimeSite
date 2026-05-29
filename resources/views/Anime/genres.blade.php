@@ -1,161 +1,170 @@
 @extends('layouts.public')
 
-@section('title', 'Жанри Аніме | Anime Portal CMS')
+@section('title', 'Жанри Аніме | AniHub')
 
 @section('content')
-<div class="container">
-    <div class="breadcrumb" style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
-        <a href="{{ route('home') }}" style="color: var(--text-muted); text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='var(--accent-color)'" onmouseout="this.style.color='var(--text-muted)'">AniHub</a>
-        <i class="fas fa-chevron-right" style="font-size: 0.7rem; color: #555;"></i>
-        <span style="color: var(--text-primary); font-weight: 600;">Жанри</span>
-    </div>
-    <h2 class="section-title">Каталог за жанрами</h2>
-    <p style="color: var(--text-muted); margin-bottom: 2rem;">Тут будуть представлені жанри. Поки що ви можете переглянути повний каталог.</p>
+<!-- AOS CSS for animations -->
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 3rem;">
-        @php
-            $dummyGenres = ['Екшн', 'Комедія', 'Драма', 'Фентезі', 'Романтика', 'Сьонен', 'Повсякденність', 'Детектив', 'Фантастика', 'Пригоди'];
-        @endphp
-
-        @foreach($dummyGenres as $genre)
-            <a href="#" style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 1.5rem 1rem; border-radius: var(--radius-md); text-align: center; color: var(--text-primary); text-decoration: none; font-weight: 600; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--accent-color)'; this.style.color='var(--accent-color)';" onmouseout="this.style.borderColor='var(--border-color)'; this.style.color='var(--text-primary)';">
-                {{ $genre }}
-            </a>
-        @endforeach
+<div class="container" style="padding-top: 2rem; padding-bottom: 5rem; overflow-x: hidden;">
+    <div style="text-align: center; margin-bottom: 4rem;" data-aos="fade-down">
+        <h1 style="font-size: 1.5rem; font-weight: 600; color: var(--text-muted);">Жанри аніме українською</h1>
     </div>
 
-    <h2 class="section-title">Всі аніме</h2>
-    <div class="anime-grid">
-        @forelse ($animes as $anime)
-            <a href="{{ route('anime.show', $anime->id) }}" class="anime-card">
-            <div style="position: relative;">
-                @if($anime->image)
-                    <img src="{{ asset('storage/' . $anime->image) }}" alt="{{ $anime->title }}" class="anime-poster" loading="lazy">
-                @else
-                    <div class="anime-poster" style="background-color: #252529; display: flex; align-items: center; justify-content: center; color: #666;">Немає постера</div>
-                @endif
-
-                <div class="rating-badge">
-                    <i class="fas fa-star" style="font-size: 0.7rem;"></i>
-                    {{ $anime->ratings->count() > 0 ? number_format($anime->ratings->avg('score'), 1) : '0.0' }}
+    <div class="genres-wrapper" style="display: flex; flex-direction: column; gap: 7rem; align-items: center;">
+        @foreach($genres as $index => $genre)
+            @php 
+                $isReversed = $index % 2 !== 0; 
+                $aosDirection = $isReversed ? 'fade-left' : 'fade-right';
+            @endphp
+            <div class="genre-section" style="display: flex; gap: 3rem; align-items: center; justify-content: space-between; width: 100%; max-width: 1200px; flex-wrap: wrap; flex-direction: {{ $isReversed ? 'row-reverse' : 'row' }};">
+                
+                <!-- Інформація про жанр (З'являється другою, delay: 150) -->
+                <div class="genre-info" style="flex: 0 0 250px; text-align: left;" data-aos="{{ $aosDirection }}" data-aos-duration="800" data-aos-delay="150">
+                    <h2 style="font-size: 3rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.5rem;">{{ $genre->name }}</h2>
+                    <div style="width: 60px; height: 6px; background: linear-gradient(90deg, #a855f7, #6366f1); border-radius: 10px; margin-bottom: 1.5rem;"></div>
+                    <a href="{{ route('anime.genre.show', $genre->id) }}" style="display: inline-flex; align-items: center; justify-content: center; padding: 0.7rem 1.8rem; background: rgba(155, 89, 182, 0.1); border: 1px solid rgba(155, 89, 182, 0.3); border-radius: 50px; color: #dcd0ff; text-decoration: none; font-size: 0.95rem; font-weight: 500; transition: all 0.3s;" onmouseover="this.style.background='rgba(155, 89, 182, 0.3)'" onmouseout="this.style.background='rgba(155, 89, 182, 0.1)'">
+                        Переглянути всі <i class="fas fa-arrow-right" style="margin-left: 0.5rem; font-size: 0.8rem;"></i>
+                    </a>
                 </div>
 
-                @auth
-                    @php
-                        $userList = $anime->userLists->where('user_id', auth()->id())->first();
-                        $barColor = 'transparent';
-                        $statusText = '';
-                        if($userList) {
-                            switch($userList->status) {
-                                case 'watching': $barColor = 'rgba(46, 204, 113, 0.50)'; $statusText = 'Переглядаю'; break;
-                                case 'plan_to_watch': $barColor = 'rgba(155, 89, 182, 0.50)'; $statusText = 'В планах'; break;
-                                case 'completed': $barColor = 'rgba(52, 152, 219, 0.50)'; $statusText = 'Переглянуто'; break;
-                                case 'on_hold': $barColor = 'rgba(241, 196, 15, 0.50)'; $statusText = 'Відкладено'; break;
-                                case 'dropped': $barColor = 'rgba(231, 76, 60, 0.50)'; $statusText = 'Кинуто'; break;
-                            }
-                        }
-                    @endphp
-                    @if($userList && $statusText)
-                        <div style="position: absolute; bottom: 0; left: 0; width: 100%; background-color: {{ $barColor }}; backdrop-filter: blur(4px); color: white; text-align: center; font-size: 0.75rem; padding: 3px 0; font-weight: 600; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
-                            {{ mb_strtoupper($statusText) }}
+                <!-- Карусель аніме (З'являється першою, delay: 0) -->
+                <div class="genre-carousel" style="flex: 0 1 800px; min-width: 0;" data-aos="{{ $aosDirection }}" data-aos-duration="800" data-aos-delay="0">
+                    <div class="swiper genre-swiper-{{ $genre->id }}" style="padding-top: 20px; padding-bottom: 40px; margin-top: -20px; margin-bottom: -40px;" {!! $isReversed ? 'dir="rtl"' : '' !!}>
+                        <div class="swiper-wrapper">
+                            @foreach($genre->animes as $anime)
+                                <div class="swiper-slide" style="width: 190px;" dir="ltr">
+                                    <a href="{{ route('anime.show', $anime->id) }}" class="genre-anime-card">
+                                        <div class="poster-wrapper">
+                                            @if($anime->image)
+                                                <img src="{{ asset('storage/' . $anime->image) }}" alt="{{ $anime->title }}" class="poster-img">
+                                            @else
+                                                <div class="poster-img" style="background-color: #252529; display: flex; align-items: center; justify-content: center; color: #666;">Немає</div>
+                                            @endif
+
+                                            <!-- Рейтинг -->
+                                            <div style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; color: #f1c40f; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">
+                                                <i class="fas fa-star"></i>
+                                                {{ $anime->ratings->count() > 0 ? number_format($anime->ratings->avg('score'), 1) : '0.0' }}
+                                            </div>
+
+                                            <!-- Статус -->
+                                            @auth
+                                                @php
+                                                    $userList = current(array_filter($anime->userLists->all(), function($ul) { return $ul->user_id == auth()->id(); }));
+                                                    $barColor = 'transparent';
+                                                    $statusText = '';
+                                                    if($userList) {
+                                                        switch($userList->status) {
+                                                            case 'watching': $barColor = 'rgba(46, 204, 113, 0.50)'; $statusText = 'Переглядаю'; break;
+                                                            case 'plan_to_watch': $barColor = 'rgba(155, 89, 182, 0.50)'; $statusText = 'В планах'; break;
+                                                            case 'completed': $barColor = 'rgba(52, 152, 219, 0.50)'; $statusText = 'Переглянуто'; break;
+                                                            case 'on_hold': $barColor = 'rgba(241, 196, 15, 0.50)'; $statusText = 'Відкладено'; break;
+                                                            case 'dropped': $barColor = 'rgba(231, 76, 60, 0.50)'; $statusText = 'Кинуто'; break;
+                                                        }
+                                                    }
+                                                @endphp
+                                                @if($statusText)
+                                                    <div style="position: absolute; bottom: 0; left: 0; width: 100%; background-color: {{ $barColor }}; backdrop-filter: blur(4px); color: white; text-align: center; font-size: 0.75rem; padding: 5px 0; font-weight: 700; text-shadow: 1px 1px 3px rgba(0,0,0,0.8);">
+                                                        {{ mb_strtoupper($statusText) }}
+                                                    </div>
+                                                @endif
+                                            @endauth
+                                        </div>
+                                        <div class="anime-title-text" style="margin-top: 1rem; font-weight: 500; font-size: 0.95rem; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-align: left;">
+                                            {{ $anime->title }}
+                                        </div>
+                                    </a>
+                                </div>
+                            @endforeach
                         </div>
-                    @endif
-                @endauth
-            </div>
-                <div class="anime-info">
-                    <h3 class="anime-title" title="{{ $anime->title }}">{{ $anime->title }}</h3>
-                    <div class="anime-meta">
-                        <span>
-                            @if(isset($anime->genres) && $anime->genres->count() > 0)
-                                {{ $anime->genres->first()->name }}
-                            @else
-                                Аніме
-                            @endif
-                        </span>
-                        <span>{{ $anime->year ?? '?' }}</span>
                     </div>
                 </div>
-            </a>
-        @empty
-            <div style="grid-column: 1 / -1; text-align: center; padding: 50px; color: var(--text-muted);">
-                <h2>На даний момент нічого ще не додано.</h2>
             </div>
-        @endforelse
-    </div>
-
-    <!-- Pagination -->
-    @if($animes->hasMorePages())
-        <div class="infinite-scroll-trigger" data-next-page="{{ $animes->nextPageUrl() }}" style="text-align: center; padding: 2rem; color: var(--accent-color);">
-            <i class="fas fa-spinner fa-spin fa-2x"></i>
-        </div>
-    @endif
-    <div style="display: none;" class="pagination-wrapper">
-        {{ $animes->links() }}
+        @endforeach
     </div>
 </div>
 
+<style>
+    .genre-anime-card {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        outline: none;
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .genre-anime-card:hover {
+        transform: translateY(-8px);
+    }
+    .genre-anime-card .poster-wrapper {
+        position: relative; 
+        border-radius: 14px; 
+        overflow: hidden; 
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3); 
+        transition: box-shadow 0.3s ease;
+    }
+    .genre-anime-card .poster-img {
+        width: 100%; 
+        height: 270px; 
+        object-fit: cover; 
+        display: block; 
+        transition: transform 0.5s ease;
+    }
+    .genre-anime-card:hover .poster-wrapper {
+        box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+    }
+    .genre-anime-card:hover .poster-img {
+        transform: scale(1.05);
+    }
+    .genre-anime-card .anime-title-text {
+        color: var(--text-primary);
+        transition: color 0.3s ease;
+    }
+    .genre-anime-card:hover .anime-title-text {
+        color: var(--accent-color);
+    }
+</style>
+
+<style>
+    @media (max-width: 992px) {
+        .genre-section {
+            flex-direction: column !important;
+            gap: 2rem !important;
+            align-items: center !important;
+        }
+        .genre-info {
+            flex: none !important;
+            width: 100%;
+            text-align: center !important;
+        }
+        .genre-carousel {
+            width: 100%;
+            margin-left: 0;
+            padding-left: 0;
+        }
+    }
+</style>
+
 @push('scripts')
+<!-- AOS JS for animations -->
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        let isFetchingNextPage = false;
-        let infiniteObserver = null;
+        // Initialize AOS animations
+        AOS.init({
+            once: true,
+            offset: 100,
+        });
 
-        function setupInfiniteScroll() {
-            if (infiniteObserver) {
-                infiniteObserver.disconnect();
-            }
-
-            const trigger = document.querySelector('.infinite-scroll-trigger');
-            if (!trigger) return;
-
-            infiniteObserver = new IntersectionObserver((entries) => {
-                if (entries[0].isIntersecting && !isFetchingNextPage) {
-                    loadNextPage(trigger.dataset.nextPage);
-                }
-            }, { rootMargin: '300px' });
-
-            infiniteObserver.observe(trigger);
-        }
-
-        function loadNextPage(url) {
-            if (!url) return;
-            isFetchingNextPage = true;
-            
-            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-                .then(res => res.text())
-                .then(html => {
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
-                    
-                    const newItems = doc.querySelectorAll('.anime-card');
-                    const grid = document.querySelector('.anime-grid');
-                    if(grid) {
-                        newItems.forEach(item => grid.appendChild(item));
-                    }
-                    
-                    const newTrigger = doc.querySelector('.infinite-scroll-trigger');
-                    const oldTrigger = document.querySelector('.infinite-scroll-trigger');
-                    
-                    if (newTrigger && oldTrigger) {
-                        oldTrigger.dataset.nextPage = newTrigger.dataset.nextPage;
-                    } else if (oldTrigger) {
-                        oldTrigger.remove();
-                    }
-                    
-                    const newPagination = doc.querySelector('.pagination-wrapper');
-                    const oldPagination = document.querySelector('.pagination-wrapper');
-                    if (newPagination && oldPagination) {
-                        oldPagination.innerHTML = newPagination.innerHTML;
-                    }
-                    
-                    isFetchingNextPage = false;
-                })
-                .catch(() => {
-                    isFetchingNextPage = false;
-                });
-        }
-
-        setupInfiniteScroll();
+        // Initialize Swipers
+        @foreach($genres as $genre)
+            new Swiper('.genre-swiper-{{ $genre->id }}', {
+                slidesPerView: 'auto',
+                spaceBetween: 25,
+                freeMode: true,
+                grabCursor: true,
+            });
+        @endforeach
     });
 </script>
 @endpush

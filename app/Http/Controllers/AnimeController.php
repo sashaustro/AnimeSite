@@ -105,8 +105,28 @@ class AnimeController extends Controller
 
     public function genres()
     {
-        $animes = Anime::orderBy('id', 'desc')->paginate(12);
-        return view('Anime.genres', compact('animes'));
+        $genres = \App\Models\Genre::with(['animes' => function($query) {
+            $query->orderBy('created_at', 'desc')->take(10)->with(['ratings']);
+        }])->has('animes', '>=', 1)->orderBy('name')->get();
+
+        return view('Anime.genres', compact('genres'));
+    }
+
+    public function genreShow($id, Request $request)
+    {
+        $genre = \App\Models\Genre::findOrFail($id);
+        
+        $topAnime = $genre->animes()->withAvg('ratings', 'score')->orderByDesc('ratings_avg_score')->take(3)->get();
+        
+        $query = $genre->animes();
+        $query = $this->applyFilters($query, $request);
+        $animes = $query->paginate(12)->appends($request->all());
+
+        if ($request->ajax()) {
+            return view('Anime.partials.grid', compact('animes'))->render();
+        }
+
+        return view('Anime.genre_show', array_merge(compact('genre', 'topAnime', 'animes'), $this->getFilterData()));
     }
 
     public function ongoing(Request $request)
