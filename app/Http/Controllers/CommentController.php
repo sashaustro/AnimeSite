@@ -72,11 +72,14 @@ class CommentController extends Controller
         $existingVote = CommentVote::where('user_id', $userId)->where('comment_id', $comment->id)->first();
         $author = $comment->user;
 
+        $finalVote = $voteValue;
+
         if ($existingVote) {
             if ($existingVote->vote === $voteValue) {
                 // Відміна голосу
                 $existingVote->delete();
                 $author->reputation -= $voteValue;
+                $finalVote = 0;
             } else {
                 // Зміна голосу
                 $existingVote->update(['vote' => $voteValue]);
@@ -98,11 +101,6 @@ class CommentController extends Controller
         }
 
         $author->save();
-
-        $finalVote = $voteValue;
-        if ($existingVote && $existingVote->vote === $voteValue) {
-            $finalVote = 0;
-        }
 
         return response()->json([
             'rating' => $comment->rating,

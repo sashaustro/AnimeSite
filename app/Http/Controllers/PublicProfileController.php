@@ -21,7 +21,7 @@ class PublicProfileController extends Controller
             'on_hold' => $user->animeLists()->where('status', 'on_hold')->count(),
             'dropped' => $user->animeLists()->where('status', 'dropped')->count(),
             'total_episodes' => $user->animeLists()->where('status', 'completed')->with('anime')->get()->sum(function($item) {
-                return $item->anime->episodes ?? 0;
+                return $item->anime->total_episodes ?? 0;
             })
         ];
         

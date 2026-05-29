@@ -160,10 +160,19 @@ class ProfileController extends Controller
         ]);
 
         $user = $request->user();
+        $userName = $user->username ?? $user->name;
+        $userEmail = $user->email;
+
+        // Schedule for deletion instead of immediate delete
+        $user->update(['scheduled_for_deletion_at' => now()->addDays(7)]);
+
+        try {
+            \Illuminate\Support\Facades\Mail::to($userEmail)->send(new \App\Mail\AccountDeletionScheduledMail($userName));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to send account deletion email: ' . $e->getMessage());
+        }
 
         Auth::logout();
-
-        $user->delete();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

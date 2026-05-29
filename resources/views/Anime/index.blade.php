@@ -380,13 +380,19 @@
         updateSliderFill();
 
         clearAllFiltersBtn.addEventListener('click', () => {
-            filterForm.reset();
-            // Reset selects/hidden explicitly
+            // Замість form.reset() очищуємо всі поля вручну, бо reset() повертає їх до HTML-значень (які можуть бути вже checked)
+            searchInput.value = '';
             sortSelect.value = 'default';
+            
+            filterForm.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                cb.checked = false;
+            });
+            
             yMinInput.value = '{{ $minYear }}';
             yMaxInput.value = '{{ $maxYear }}';
             yMinSlider.value = '{{ $minYear }}';
             yMaxSlider.value = '{{ $maxYear }}';
+            
             fetchFilters();
         });
 
@@ -810,6 +816,8 @@
                 <h2 class="section-title" style="margin-bottom: 0;">
                     @if(request()->routeIs('anime.top'))
                         ТОП-100 АНІМЕ
+                    @elseif(isset($isUserSearch) && $isUserSearch)
+                        Результати пошуку користувачів
                     @else
                         {{ $pageTitle ?? 'Аніме каталог' }}
                     @endif
@@ -817,6 +825,10 @@
                 @if(isset($animes))
                     <span style="color: var(--text-muted); font-size: 0.95rem; background: rgba(255,255,255,0.05); padding: 0.3rem 0.8rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
                         Знайдено: <strong style="color: var(--text-primary);">{{ method_exists($animes, 'total') ? $animes->total() : $animes->count() }}</strong> аніме
+                    </span>
+                @elseif(isset($users))
+                    <span style="color: var(--text-muted); font-size: 0.95rem; background: rgba(255,255,255,0.05); padding: 0.3rem 0.8rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                        Знайдено: <strong style="color: var(--text-primary);">{{ method_exists($users, 'total') ? $users->total() : $users->count() }}</strong> користувачів
                     </span>
                 @endif
             </div>
@@ -827,8 +839,16 @@
             @endif
         </section>
 
+        @if(isset($schedule))
+            @include('Anime.partials.schedule')
+        @endif
+
         <div id="animeGridContainer">
-            @include('Anime.partials.grid')
+            @if(isset($isUserSearch) && $isUserSearch)
+                @include('Anime.partials.users_grid')
+            @else
+                @include('Anime.partials.grid')
+            @endif
         </div>
     </div>
 </div>

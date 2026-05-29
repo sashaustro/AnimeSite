@@ -27,13 +27,34 @@ class User extends Authenticatable
         'profile_status',
         'reputation',
         'muted_until',
-        'mute_reason'
+        'mute_reason',
+        'scheduled_for_deletion_at'
     ];
+
+    protected static function booted()
+    {
+        static::deleting(function ($user) {
+            $user->comment_votes()->delete();
+            $user->reports()->delete();
+            $user->watchHistories()->delete();
+            $user->reviews()->delete();
+            $user->comments()->delete();
+            $user->ratings()->delete();
+            $user->animeLists()->delete();
+            $user->collections()->each(function ($collection) {
+                $collection->delete(); // This handles collection_anime detachment if needed
+            });
+            if ($user->avatar && \Illuminate\Support\Facades\Storage::disk('public')->exists($user->avatar)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($user->avatar);
+            }
+        });
+    }
 
     public function comment_votes()
     {
         return $this->hasMany(CommentVote::class);
     }
+
 
     public function reports()
     {
@@ -80,12 +101,13 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'muted_until' => 'datetime',
+            'scheduled_for_deletion_at' => 'datetime',
         ];
     }
 
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return in_array($this->role, ['admin', 'super_admin']);
     }
 
     public function watchHistories()

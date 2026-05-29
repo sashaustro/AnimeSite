@@ -77,7 +77,9 @@
                                 <option value="">Невідомо</option>
                                 @php $currentYear = date('Y'); @endphp
 
-                                <option value="{{ $currentYear }}" {{ $anime->year == $currentYear ? 'selected' : '' }}>{{ $currentYear }}</option>
+                                <optgroup label="Поточний рік">
+                                    <option value="{{ $currentYear }}" {{ $anime->year == $currentYear ? 'selected' : '' }}>{{ $currentYear }}</option>
+                                </optgroup>
 
                                 <optgroup label="Анонси (Майбутні роки)">
                                     @for($y = $currentYear + 1; $y <= $currentYear + 5; $y++)
@@ -119,18 +121,28 @@
                             </div>
                         </div>
 
-                        <div class="form-group">
-                            <label>День виходу (для онгоїнгів)</label>
-                            <select name="broadcast_day" class="form-control">
-                                <option value="">— (Не вказано)</option>
-                                <option value="Понеділок" {{ $anime->broadcast_day == 'Понеділок' ? 'selected' : '' }}>Понеділок</option>
-                                <option value="Вівторок" {{ $anime->broadcast_day == 'Вівторок' ? 'selected' : '' }}>Вівторок</option>
-                                <option value="Середа" {{ $anime->broadcast_day == 'Середа' ? 'selected' : '' }}>Середа</option>
-                                <option value="Четвер" {{ $anime->broadcast_day == 'Четвер' ? 'selected' : '' }}>Четвер</option>
-                                <option value="П'ятниця" {{ $anime->broadcast_day == "П'ятниця" ? 'selected' : '' }}>П'ятниця</option>
-                                <option value="Субота" {{ $anime->broadcast_day == 'Субота' ? 'selected' : '' }}>Субота</option>
-                                <option value="Неділя" {{ $anime->broadcast_day == 'Неділя' ? 'selected' : '' }}>Неділя</option>
-                            </select>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>День виходу (для онгоїнгів)</label>
+                                    <select name="broadcast_day" class="form-control">
+                                        <option value="">— (Не вказано)</option>
+                                        <option value="Понеділок" {{ $anime->broadcast_day == 'Понеділок' ? 'selected' : '' }}>Понеділок</option>
+                                        <option value="Вівторок" {{ $anime->broadcast_day == 'Вівторок' ? 'selected' : '' }}>Вівторок</option>
+                                        <option value="Середа" {{ $anime->broadcast_day == 'Середа' ? 'selected' : '' }}>Середа</option>
+                                        <option value="Четвер" {{ $anime->broadcast_day == 'Четвер' ? 'selected' : '' }}>Четвер</option>
+                                        <option value="П'ятниця" {{ $anime->broadcast_day == "П'ятниця" ? 'selected' : '' }}>П'ятниця</option>
+                                        <option value="Субота" {{ $anime->broadcast_day == 'Субота' ? 'selected' : '' }}>Субота</option>
+                                        <option value="Неділя" {{ $anime->broadcast_day == 'Неділя' ? 'selected' : '' }}>Неділя</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Час виходу</label>
+                                    <input type="time" name="broadcast_time" class="form-control" value="{{ $anime->broadcast_time ? \Carbon\Carbon::parse($anime->broadcast_time)->format('H:i') : '' }}">
+                                </div>
+                            </div>
                         </div>
 
                         <div class="form-group">
@@ -218,10 +230,26 @@
     </div>
 
 <div class="card card-info mt-4">
-    <div class="card-header">
-        <h3 class="card-title">Епізоди (Відео)</h3>
-        <div class="card-tools d-flex align-items-center">
-            <input type="text" id="episodeSearch" class="form-control form-control-sm mr-2" placeholder="Пошук епізоду (серія або озвучка)..." style="width: 250px;">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="card-title m-0">Епізоди (Відео)</h3>
+        <div class="card-tools d-flex align-items-center m-0 ml-auto">
+            <style>
+                .search-expandable { position: relative; display: flex; align-items: center; }
+                .search-expandable .btn-search-icon { position: absolute; left: 0; top: 0; background: transparent; border: none; height: 31px; width: 35px; color: #495057; font-size: 1.1rem; border-radius: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2; }
+                .search-expandable input { width: 35px; opacity: 0; padding: 0; border: 1px solid transparent; transition: width 0.3s ease, opacity 0.3s ease, padding 0.3s ease, background 0.3s ease; background: transparent; border-radius: 20px; height: 31px; outline: none; cursor: pointer; }
+                .search-expandable.active input { width: 250px; opacity: 1; padding: 0 15px 0 35px; border: 1px solid #ced4da; background: #fff; margin-right: 10px; cursor: text; }
+                .search-expandable.active .btn-search-icon:hover { color: #17a2b8; }
+                .search-expandable .close-search { display: none; position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #adb5bd; cursor: pointer; z-index: 3; }
+                .search-expandable.active .close-search { display: block; }
+                .search-expandable.active .close-search:hover { color: #dc3545; }
+            </style>
+            <div class="search-expandable mr-3" id="episodeSearchForm">
+                <button type="button" class="btn-search-icon" id="toggleEpisodeSearch" title="Пошук">
+                    <i class="fas fa-search"></i>
+                </button>
+                <input type="text" id="episodeSearch" placeholder="Пошук епізоду (серія або озвучка)...">
+                <i class="fas fa-times close-search" id="closeEpisodeSearch" title="Очистити"></i>
+            </div>
             <a href="{{ route('episodes.create', $anime->id) }}" class="btn btn-sm btn-primary text-nowrap">
                 <i class="fas fa-plus"></i> Додати епізод
             </a>
@@ -273,7 +301,8 @@
         const rows = tableBody.querySelectorAll('tr');
 
         if (searchInput && rows.length > 0 && !rows[0].querySelector('td[colspan]')) {
-            searchInput.addEventListener('keyup', function() {
+            // Search input logic
+            searchInput.addEventListener('input', function() {
                 const term = this.value.toLowerCase();
                 rows.forEach(row => {
                     const text = row.textContent.toLowerCase();
@@ -283,6 +312,26 @@
                         row.style.display = 'none';
                     }
                 });
+            });
+
+            // Expandable search logic
+            const searchForm = document.getElementById('episodeSearchForm');
+            const toggleBtn = document.getElementById('toggleEpisodeSearch');
+            const closeBtn = document.getElementById('closeEpisodeSearch');
+
+            toggleBtn.addEventListener('click', function(e) {
+                if (!searchForm.classList.contains('active')) {
+                    searchForm.classList.add('active');
+                    searchInput.focus();
+                } else if (searchInput.value.trim() === '') {
+                    searchForm.classList.remove('active');
+                }
+            });
+
+            closeBtn.addEventListener('click', function(e) {
+                searchInput.value = '';
+                searchInput.dispatchEvent(new Event('input')); // trigger filtering
+                searchForm.classList.remove('active');
             });
         }
 

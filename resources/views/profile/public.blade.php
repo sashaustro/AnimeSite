@@ -20,18 +20,20 @@
             @if($user->avatar)
                 <img src="{{ asset('storage/' . $user->avatar) }}" alt="Avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color);">
             @else
-                <div style="width: 100%; height: 100%; border-radius: 50%; background: var(--bg-card); border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 3rem; color: var(--text-muted);">
-                    <i class="fas fa-user"></i>
+                <div style="width: 100%; height: 100%; border-radius: 50%; background: #2c3e50; border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 4rem; font-weight: bold; color: white;">
+                    {{ mb_strtoupper(mb_substr($user->username, 0, 1)) }}
                 </div>
             @endif
         </div>
 
         <!-- Username & Status -->
         <div style="display: flex; justify-content: center; margin-bottom: 0.5rem;">
-            <div style="position: relative; display: inline-flex; align-items: center;">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 0.4rem;">
                 <h2 style="margin: 0; font-size: 1.5rem;">{{ $user->username }}</h2>
-                @if($user->role == 'admin')
-                    <span style="position: absolute; left: 100%; margin-left: 0.5rem; background: #e74c3c; color: white; font-size: 0.7rem; padding: 0.1rem 0.4rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); display: inline-flex; align-items: center; justify-content: center;">Admin</span>
+                @if($user->role == 'super_admin')
+                    <span style="background: #8e44ad; color: white; font-size: 0.7rem; padding: 0.1rem 0.5rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); display: inline-flex; align-items: center; justify-content: center; white-space: nowrap;">ГОЛОВНИЙ АДМІН</span>
+                @elseif($user->role == 'admin')
+                    <span style="background: #e74c3c; color: white; font-size: 0.7rem; padding: 0.1rem 0.5rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); display: inline-flex; align-items: center; justify-content: center;">ADMIN</span>
                 @endif
             </div>
         </div>
@@ -46,6 +48,12 @@
         <div style="color: var(--text-primary); margin-bottom: 0.5rem;">
             {{ $user->status_text ?: 'Статус не встановлено' }}
         </div>
+        
+        @if($user->scheduled_for_deletion_at)
+            <div style="color: #ef4444; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.3rem 0.8rem; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; display: inline-flex; align-items: center; gap: 0.4rem;">
+                <i class="fas fa-exclamation-circle"></i> Акаунт видаляється (залишилось {{ floor(now()->diffInDays($user->scheduled_for_deletion_at)) }} днів)
+            </div>
+        @endif
         
         <div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;">
             На сайті з {{ $user->created_at->format('d.m.Y') }}
@@ -133,8 +141,8 @@
                             <div style="width: 80px; background: #333; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;">Немає</div>
                         @endif
                         
-                        <div style="padding: 1rem; flex: 1;">
-                            <h4 style="font-weight: 600; margin-bottom: 0.5rem; font-size: 1rem;">
+                        <div style="padding: 1rem; flex: 1; min-width: 0;">
+                            <h4 style="font-weight: 600; margin-bottom: 0.5rem; font-size: 1rem; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;" title="{{ $history->anime ? $history->anime->title : '' }}">
                                 @if($history->anime)
                                     <a href="{{ route('anime.show', ['anime' => $history->anime->id, 'ep' => $history->episode_id]) }}" style="color: var(--text-primary); text-decoration: none;">
                                         {{ $history->anime->title }}
@@ -143,7 +151,7 @@
                                     Аніме видалено
                                 @endif
                             </h4>
-                            <p style="font-size: 0.85rem; color: var(--text-muted);">
+                            <p style="font-size: 0.85rem; color: var(--text-muted); overflow: hidden; white-space: nowrap; text-overflow: ellipsis;" title="@if($history->episode)Серія {{ $history->episode->episode_number }}@if($history->episode->title) - {{ $history->episode->title }} @endif @endif">
                                 @if($history->episode)
                                     Серія {{ $history->episode->episode_number }}
                                     @if($history->episode->title) - {{ $history->episode->title }} @endif
@@ -267,7 +275,7 @@
             @foreach($collections as $collection)
                 <div style="background: var(--bg-card); border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border-color);">
                     <div style="padding: 1.5rem;">
-                        <h4 style="margin: 0 0 0.5rem 0; font-size: 1.2rem; color: var(--text-primary);">{{ $collection->name }}</h4>
+                        <h4 style="margin: 0 0 0.5rem 0; font-size: 1.2rem; color: var(--text-primary); overflow: hidden; white-space: nowrap; text-overflow: ellipsis;" title="{{ $collection->name }}">{{ $collection->name }}</h4>
                         <div style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
                             Вміщує {{ $collection->animes_count }} аніме
                         </div>

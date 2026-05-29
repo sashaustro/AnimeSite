@@ -67,11 +67,18 @@
             .search-expandable .btn-search-icon {
                 background: #fff; border: 1px solid #ced4da; height: 32px; width: 35px;
                 color: #6c757d; border-radius: 20px; display: flex; align-items: center; justify-content: center;
-                cursor: pointer; z-index: 2; transition: color 0.3s;
+                cursor: pointer; z-index: 2; transition: all 0.3s;
+            }
+            .search-expandable .btn-search-icon:hover {
+                color: #17a2b8;
+                border-color: #17a2b8;
             }
             .search-expandable.active .btn-search-icon {
                 position: absolute; left: 0; top: 0; height: 100%; border: none; background: transparent;
                 color: #495057;
+            }
+            .search-expandable.active .btn-search-icon:hover {
+                color: #17a2b8;
             }
             .search-expandable .close-search {
                 display: none; position: absolute; right: 10px; top: 50%; transform: translateY(-50%);

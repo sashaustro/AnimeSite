@@ -62,7 +62,9 @@
                             <option value="">Невідомо</option>
                             @php $currentYear = date('Y'); @endphp
 
-                            <option value="{{ $currentYear }}" selected>{{ $currentYear }}</option>
+                            <optgroup label="Поточний рік">
+                                <option value="{{ $currentYear }}" selected>{{ $currentYear }}</option>
+                            </optgroup>
 
                             <optgroup label="Анонси (Майбутні роки)">
                                 @for($y = $currentYear + 1; $y <= $currentYear + 5; $y++)
@@ -104,18 +106,28 @@
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label>День виходу (для онгоїнгів)</label>
-                        <select name="broadcast_day" class="form-control">
-                            <option value="">— (Не вказано)</option>
-                            <option value="Понеділок">Понеділок</option>
-                            <option value="Вівторок">Вівторок</option>
-                            <option value="Середа">Середа</option>
-                            <option value="Четвер">Четвер</option>
-                            <option value="П'ятниця">П'ятниця</option>
-                            <option value="Субота">Субота</option>
-                            <option value="Неділя">Неділя</option>
-                        </select>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>День виходу (для онгоїнгів)</label>
+                                <select name="broadcast_day" class="form-control">
+                                    <option value="">— (Не вказано)</option>
+                                    <option value="Понеділок">Понеділок</option>
+                                    <option value="Вівторок">Вівторок</option>
+                                    <option value="Середа">Середа</option>
+                                    <option value="Четвер">Четвер</option>
+                                    <option value="П'ятниця">П'ятниця</option>
+                                    <option value="Субота">Субота</option>
+                                    <option value="Неділя">Неділя</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Час виходу</label>
+                                <input type="time" name="broadcast_time" class="form-control">
+                            </div>
+                        </div>
                     </div>
 
                     <div class="form-group">

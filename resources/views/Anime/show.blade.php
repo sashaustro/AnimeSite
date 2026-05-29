@@ -104,17 +104,22 @@
                     </div>
 
                     <script>
+                    function showToast(message) {
+                        var toast = document.getElementById("toast");
+                        toast.innerText = message;
+                        toast.style.visibility = "visible";
+                        toast.style.opacity = "1";
+                        toast.style.bottom = "50px";
+                        setTimeout(function(){
+                            toast.style.opacity = "0";
+                            toast.style.bottom = "30px";
+                            setTimeout(function(){ toast.style.visibility = "hidden"; }, 300);
+                        }, 3000);
+                    }
+
                     function copyToClipboard(text) {
                         navigator.clipboard.writeText(text).then(function() {
-                            var toast = document.getElementById("toast");
-                            toast.style.visibility = "visible";
-                            toast.style.opacity = "1";
-                            toast.style.bottom = "50px";
-                            setTimeout(function(){
-                                toast.style.opacity = "0";
-                                toast.style.bottom = "30px";
-                                setTimeout(function(){ toast.style.visibility = "hidden"; }, 300);
-                            }, 3000);
+                            showToast("Посилання скопійовано!");
                         });
                     }
                     </script>
@@ -635,7 +640,7 @@
                         <div class="comment-item" style="background: var(--bg-card); padding: 1.5rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); position: relative; transition: border-color 0.2s;">
                             
                             <div style="position: absolute; right: 1.5rem; top: 1.5rem; display: flex; gap: 0.5rem; z-index: 10;" class="comment-actions">
-                                @if(auth()->check() && (auth()->id() == $comment->user_id || auth()->user()->role == 'admin'))
+                                @if(auth()->check() && (auth()->id() == $comment->user_id || auth()->user()->isAdmin()))
                                     @if(auth()->id() == $comment->user_id)
                                         <button onclick="editComment({{ $comment->id }})" class="comment-action-btn edit-btn" title="Редагувати">
                                             <i class="fas fa-edit"></i>
@@ -672,7 +677,9 @@
                                         <a href="{{ route('profile.public', $comment->user->id) }}" style="color: #e9ecef; font-weight: 500; text-decoration: none;">
                                             {{ $comment->user->username }}
                                         </a>
-                                        @if($comment->user->role == 'admin')
+                                        @if($comment->user->role == 'super_admin')
+                                            <span style="background: #8e44ad; color: white; padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.7rem; font-weight: bold;">ГОЛОВНИЙ АДМІН</span>
+                                        @elseif($comment->user->role == 'admin')
                                             <span style="background: #e74c3c; color: white; padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.7rem; font-weight: bold;">ADMIN</span>
                                         @endif
                                         <span style="color: #6c757d; font-size: 0.85rem;">• {{ $comment->created_at->diffForHumans() }}</span>
@@ -845,7 +852,7 @@
                     }
                 }).then(response => response.json()).then(data => {
                     if(!data.success) {
-                        alert('Помилка оновлення колекції');
+                        showToast('Помилка оновлення колекції');
                         this.checked = !this.checked;
                     }
                 });
@@ -881,9 +888,9 @@
             .then(response => {
                 if(!response.ok) {
                     if (response.status === 401) {
-                        alert('Будь ласка, увійдіть, щоб голосувати.');
+                        showToast('Будь ласка, увійдіть, щоб голосувати.');
                     } else if (response.status === 400) {
-                        return response.json().then(data => { alert(data.error); throw new Error(data.error); });
+                        return response.json().then(data => { showToast(data.error); throw new Error(data.error); });
                     }
                     throw new Error('Network response was not ok');
                 }
@@ -891,7 +898,16 @@
             })
             .then(data => {
                 // Оновлюємо рейтинг
-                document.getElementById('rating-val-' + id).innerText = data.rating;
+                const ratingEl = document.getElementById('rating-val-' + id);
+                ratingEl.innerText = data.rating;
+                
+                if (data.rating > 0) {
+                    ratingEl.style.color = '#2ecc71';
+                } else if (data.rating < 0) {
+                    ratingEl.style.color = '#e74c3c';
+                } else {
+                    ratingEl.style.color = 'var(--text-color)';
+                }
                 
                 // Оновлюємо кольори кнопок
                 const upBtn = document.getElementById('upvote-btn-' + id);

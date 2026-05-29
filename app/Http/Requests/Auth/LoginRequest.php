@@ -54,6 +54,12 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        $user = Auth::user();
+        if ($user && $user->scheduled_for_deletion_at) {
+            $user->update(['scheduled_for_deletion_at' => null]);
+            session()->flash('status', 'Ваш акаунт успішно відновлено! Заплановане видалення скасовано.');
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 

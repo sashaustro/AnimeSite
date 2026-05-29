@@ -39,7 +39,12 @@
         <!-- Password -->
         <div class="form-group mt-4">
             <label class="form-label" for="password">Пароль</label>
-            <input id="password" class="form-control" type="password" name="password" required autocomplete="new-password" />
+            <div style="position: relative;">
+                <input id="password" class="form-control" type="password" name="password" required autocomplete="new-password" style="padding-right: 40px;" />
+                <button type="button" onclick="togglePassword('password', this)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 5px;">
+                    <i class="far fa-eye"></i>
+                </button>
+            </div>
             @error('password')
                 <div style="color: #ef4444; font-size: 0.8rem; margin-top: 0.25rem;">{{ $message }}</div>
             @enderror
@@ -48,7 +53,12 @@
         <!-- Confirm Password -->
         <div class="form-group mt-4">
             <label class="form-label" for="password_confirmation">Підтвердження паролю</label>
-            <input id="password_confirmation" class="form-control" type="password" name="password_confirmation" required autocomplete="new-password" />
+            <div style="position: relative;">
+                <input id="password_confirmation" class="form-control" type="password" name="password_confirmation" required autocomplete="new-password" style="padding-right: 40px;" />
+                <button type="button" onclick="togglePassword('password_confirmation', this)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 5px;">
+                    <i class="far fa-eye"></i>
+                </button>
+            </div>
             @error('password_confirmation')
                 <div style="color: #ef4444; font-size: 0.8rem; margin-top: 0.25rem;">{{ $message }}</div>
             @enderror
@@ -65,4 +75,20 @@
         </div>
     </form>
 </div>
+
+<script>
+function togglePassword(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const icon = btn.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+</script>
 @endsection

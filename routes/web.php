@@ -20,6 +20,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/cabinet/lists', [ProfileController::class, 'lists'])->name('cabinet.lists');
     Route::get('/cabinet/collections', [ProfileController::class, 'collections'])->name('cabinet.collections');
     Route::put('/cabinet/profile', [ProfileController::class, 'updateProfile'])->name('cabinet.profile.update');
+    Route::delete('/cabinet/profile', [ProfileController::class, 'destroy'])->name('cabinet.profile.destroy');
     Route::post('/logout', [\App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'destroy'])->name('logout');
     Route::post('/anime/{anime}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
 
@@ -55,7 +56,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::delete('/anime/{anime}', [AnimeController::class, 'destroy'])->name('anime.destroy');
     // Користувачі
     Route::get('/users', [\App\Http\Controllers\Admin\UserController::class, 'index'])->name('admin.users.index');
-    Route::post('/users/{user}/toggle-role', [\App\Http\Controllers\Admin\UserController::class, 'toggleRole'])->name('admin.users.toggle_role');
+    Route::post('/users/{user}/update-role', [\App\Http\Controllers\Admin\UserController::class, 'updateRole'])->name('admin.users.update_role');
+    Route::delete('/users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'destroy'])->name('admin.users.destroy');
+    Route::post('/users/{user}/restore', [\App\Http\Controllers\Admin\UserController::class, 'restore'])->name('admin.users.restore');
+    Route::delete('/users/{user}/force-delete', [\App\Http\Controllers\Admin\UserController::class, 'forceDelete'])->name('admin.users.force_delete');
+    Route::post('/users/{user}/send-reset-link', [\App\Http\Controllers\Admin\UserController::class, 'sendResetLink'])->name('admin.users.send_reset_link');
     Route::post('/users/{user}/mute', [\App\Http\Controllers\Admin\ReportController::class, 'mute'])->name('admin.users.mute');
     Route::post('/users/{user}/unmute', [\App\Http\Controllers\Admin\ReportController::class, 'unmute'])->name('admin.users.unmute');
 

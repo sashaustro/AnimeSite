@@ -15,8 +15,8 @@
             @if($user->avatar)
                 <img src="{{ asset('storage/' . $user->avatar) }}" alt="Avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color);">
             @else
-                <div style="width: 100%; height: 100%; border-radius: 50%; background: var(--bg-card); border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 3rem; color: var(--text-muted);">
-                    <i class="fas fa-user"></i>
+                <div style="width: 100%; height: 100%; border-radius: 50%; background: #2c3e50; border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 4rem; font-weight: bold; color: white;">
+                    {{ mb_strtoupper(mb_substr($user->username, 0, 1)) }}
                 </div>
             @endif
 
@@ -238,6 +238,32 @@
 
                 <button type="submit" class="btn btn-primary" style="padding: 0.8rem 2rem;">Зберегти зміни</button>
             </form>
+
+            <hr style="border-color: var(--border-color); margin: 3rem 0 2rem 0;">
+            
+            <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radius-lg); padding: 1.5rem;">
+                <h4 style="color: #ef4444; margin-bottom: 0.5rem; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-exclamation-triangle"></i> Небезпечна зона
+                </h4>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
+                    Видалення акаунта призведе до безповоротної втрати всіх ваших даних: коментарів, списків, оцінок та колекцій. Цю дію неможливо скасувати.
+                </p>
+                
+                <form action="{{ route('cabinet.profile.destroy') }}" method="POST" onsubmit="return confirm('Ви впевнені, що хочете назавжди видалити свій акаунт? Цю дію неможливо скасувати.');">
+                    @csrf
+                    @method('DELETE')
+                    
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label class="form-label" style="color: #ef4444;">Для підтвердження введіть ваш поточний пароль</label>
+                        <input type="password" name="password" class="form-control" style="border-color: rgba(239, 68, 68, 0.3);" required>
+                        @error('password', 'userDeletion')<div style="color: #ef4444; font-size: 0.8rem; margin-top: 0.25rem;">{{ $message }}</div>@enderror
+                    </div>
+                    
+                    <button type="submit" class="btn" style="background-color: #ef4444; color: white; padding: 0.6rem 1.5rem; border: none; border-radius: var(--radius-md); font-weight: 600; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.backgroundColor='#dc2626'" onmouseout="this.style.backgroundColor='#ef4444'">
+                        Видалити акаунт назавжди
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
     <script>

@@ -12,62 +12,31 @@
             align-items: center;
         }
         .search-expandable input {
-            width: 0;
-            opacity: 0;
-            padding: 0;
-            border: none;
+            width: 0; opacity: 0; padding: 0; border: none;
             transition: width 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
-            background: #f8f9fa;
-            border-radius: 20px;
-            height: 31px;
-            outline: none;
+            background: #fff; border-radius: 20px; height: 32px; outline: none; font-size: 0.875rem;
         }
         .search-expandable.active input {
-            width: 300px;
-            opacity: 1;
-            padding: 0 15px 0 35px;
-            border: 1px solid #ced4da;
-            margin-right: 10px;
+            width: 300px; opacity: 1; padding: 0 30px 0 35px; border: 1px solid #ced4da; margin-right: 10px;
         }
         .search-expandable .btn-search-icon {
-            background: transparent;
-            border: none;
-            height: 31px;
-            width: 35px;
-            color: #6c757d;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            z-index: 2;
+            background: #fff; border: 1px solid #ced4da; height: 32px; width: 35px;
+            color: #6c757d; border-radius: 20px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 2; transition: color 0.3s;
         }
         .search-expandable.active .btn-search-icon {
-            position: absolute;
-            left: 0;
-            top: 0;
-            height: 100%;
+            position: absolute; left: 0; top: 0; height: 100%; border: none; background: transparent;
             color: #495057;
         }
         .search-expandable.active .btn-search-icon:hover {
             color: #17a2b8;
         }
         .search-expandable .close-search {
-            display: none;
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #adb5bd;
-            cursor: pointer;
-            z-index: 3;
+            display: none; position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
+            color: #adb5bd; cursor: pointer; z-index: 3;
         }
-        .search-expandable.active .close-search {
-            display: block;
-        }
-        .search-expandable.active .close-search:hover {
-            color: #dc3545;
-        }
+        .search-expandable.active .close-search { display: block; }
+        .search-expandable.active .close-search:hover { color: #dc3545; }
     </style>
 
     <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">

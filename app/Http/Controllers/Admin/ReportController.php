@@ -13,11 +13,25 @@ class ReportController extends Controller
     public function index(Request $request)
     {
         $tab = $request->query('tab', 'comment');
+        $status = $request->query('status');
+        $search = $request->query('search');
         
-        $reports = Report::with('user')
-            ->where('type', $tab)
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
+        $query = Report::with('user')->where('type', $tab);
+
+        if ($status && in_array($status, ['pending', 'resolved'])) {
+            $query->where('status', $status);
+        }
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('message', 'like', "%{$search}%")
+                  ->orWhereHas('user', function($uq) use ($search) {
+                      $uq->where('username', 'like', "%{$search}%");
+                  });
+            });
+        }
+        
+        $reports = $query->orderBy('created_at', 'desc')->paginate(15)->appends($request->all());
             
         return view('admin.reports.index', compact('reports', 'tab'));
     }

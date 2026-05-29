@@ -4,6 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @mixin \Illuminate\Database\Eloquent\Builder
+ * @mixin \Illuminate\Database\Query\Builder
+ */
 class Anime extends Model
 {
     protected $fillable = [
@@ -20,6 +24,7 @@ class Anime extends Model
         'total_episodes',
         'duration',
         'broadcast_day',
+        'broadcast_time',
         'source',
         'author',
         'season'

@@ -3,15 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Anime;
-use App\Http\Requests\AnimeRequest;
+use App\Models\Genre;
 use App\Services\AnimeService;
 use Illuminate\Http\Request;
 
 class AnimeController extends Controller
 {
-    protected $animeService;
+    protected AnimeService $animeService;
 
-    public function __construct(\App\Services\AnimeService $animeService)
+    public function __construct(AnimeService $animeService)
     {
         $this->animeService = $animeService;
     }
@@ -29,6 +29,9 @@ class AnimeController extends Controller
         }
         if ($request->filled('statuses')) {
             $query->whereIn('status', $request->statuses);
+        }
+        if ($request->filled('seasons')) {
+            $query->whereIn('season', $request->seasons);
         }
         if ($request->filled('countries')) {
             $query->whereIn('country', $request->countries);
@@ -91,16 +94,35 @@ class AnimeController extends Controller
 
     public function index(Request $request)
     {
+        $search = $request->search;
+        $isUserSearch = $search && str_starts_with(trim($search), '@');
+
+        if ($isUserSearch) {
+            $username = ltrim(trim($search), '@');
+            $users = \App\Models\User::where('username', 'like', '%' . $username . '%')
+                ->orWhere('name', 'like', '%' . $username . '%')
+                ->orderBy('created_at', 'desc')
+                ->paginate(12)->appends($request->all());
+
+            if ($request->ajax()) {
+                return view('Anime.partials.users_grid', compact('users'))->render();
+            }
+
+            $heroAnimes = Anime::with(['genres', 'ratings'])->orderBy('created_at', 'desc')->take(5)->get();
+            return view('Anime.index', array_merge(compact('users', 'heroAnimes', 'isUserSearch'), $this->getFilterData()));
+        }
+
         $query = Anime::query();
         $query = $this->applyFilters($query, $request);
         $animes = $query->paginate(12)->appends($request->all());
+        $isUserSearch = false;
 
         if ($request->ajax()) {
             return view('Anime.partials.grid', compact('animes'))->render();
         }
 
         $heroAnimes = Anime::with(['genres', 'ratings'])->orderBy('created_at', 'desc')->take(5)->get();
-        return view('Anime.index', array_merge(compact('animes', 'heroAnimes'), $this->getFilterData()));
+        return view('Anime.index', array_merge(compact('animes', 'heroAnimes', 'isUserSearch'), $this->getFilterData()));
     }
 
     public function genres()
@@ -140,7 +162,51 @@ class AnimeController extends Controller
         }
         
         $heroAnimes = Anime::with(['genres', 'ratings'])->where('status', 'ongoing')->orderBy('created_at', 'desc')->take(5)->get();
-        return view('Anime.index', array_merge(compact('animes', 'heroAnimes'), $this->getFilterData()))->with('pageTitle', 'Онгоїнги');
+        
+        // Справжній розклад на основі поля broadcast_day
+        $schedule = [];
+        $daysOfWeekUa = [
+            0 => 'Неділя',
+            1 => 'Понеділок',
+            2 => 'Вівторок',
+            3 => 'Середа',
+            4 => 'Четвер',
+            5 => 'П\'ятниця',
+            6 => 'Субота'
+        ];
+        $daysOfWeekShort = ['НД', 'ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'];
+
+        for ($i = 0; $i < 14; $i++) {
+            $date = \Carbon\Carbon::now()->addDays($i);
+            $dayIndex = $date->dayOfWeek; // 0 (Sunday) to 6 (Saturday)
+            $ukrainianDayName = $daysOfWeekUa[$dayIndex];
+            
+            // Шукаємо онгоїнги, які виходять у цей день
+            $dayAnimes = \App\Models\Anime::where('status', 'ongoing')
+                ->where('broadcast_day', $ukrainianDayName)
+                ->get();
+            
+            $episodes = [];
+            foreach ($dayAnimes as $anime) {
+                $episodes[] = [
+                    'time' => $anime->broadcast_time ? \Carbon\Carbon::parse($anime->broadcast_time)->format('H:i') : '--:--',
+                    'anime_id' => $anime->id,
+                    'title' => $anime->title,
+                    'image' => $anime->image,
+                    'episode' => $anime->total_episodes ? $anime->total_episodes + 1 : '?' // Приблизний наступний епізод
+                ];
+            }
+            
+            $schedule[] = [
+                'date' => $date->format('Y-m-d'),
+                'day_name' => $daysOfWeekShort[$dayIndex],
+                'day_number' => $date->format('d'),
+                'is_today' => $i === 0,
+                'episodes' => $episodes
+            ];
+        }
+
+        return view('Anime.index', array_merge(compact('animes', 'heroAnimes', 'schedule'), $this->getFilterData()))->with('pageTitle', 'Онгоїнги — аніме що виходить зараз');
     }
 
     public function top(Request $request)
@@ -206,7 +272,7 @@ class AnimeController extends Controller
 
         $animes = $query->orderBy('id', 'desc')->paginate(20)->appends($request->all());
 
-        $genres = \App\Models\Genre::orderBy('name')->get();
+        $genres = Genre::orderBy('name')->get();
         // Get unique formats and countries for dropdowns
         $formats = Anime::whereNotNull('format')->where('format', '!=', '')->distinct()->pluck('format');
         $countries = Anime::whereNotNull('country')->where('country', '!=', '')->distinct()->pluck('country');
@@ -220,7 +286,7 @@ class AnimeController extends Controller
      */
     public function create()
     {
-        $genres = \App\Models\Genre::orderBy('name')->get();
+        $genres = Genre::orderBy('name')->get();
         return view('Anime.create', compact('genres'));
     }
 
@@ -245,6 +311,7 @@ class AnimeController extends Controller
             'total_episodes' => 'nullable|integer|min:1',
             'duration' => 'nullable|string|max:100',
             'broadcast_day' => 'nullable|string|max:50',
+            'broadcast_time' => 'nullable|date_format:H:i',
             'source' => 'nullable|string|max:100',
             'author' => 'nullable|string|max:255',
             'season' => 'nullable|string|max:50',
@@ -316,7 +383,7 @@ class AnimeController extends Controller
     public function edit(string $id)
     {
         $anime = Anime::findOrFail($id);
-        $genres = \App\Models\Genre::orderBy('name')->get();
+        $genres = Genre::orderBy('name')->get();
         return view('Anime.edit', compact('anime', 'genres'));
     }
 
@@ -343,6 +410,7 @@ class AnimeController extends Controller
             'total_episodes' => 'nullable|integer|min:1',
             'duration' => 'nullable|string|max:100',
             'broadcast_day' => 'nullable|string|max:50',
+            'broadcast_time' => 'nullable|date_format:H:i',
             'source' => 'nullable|string|max:100',
             'author' => 'nullable|string|max:255',
             'season' => 'nullable|string|max:50',

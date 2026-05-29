@@ -13,8 +13,8 @@ class EnsureUserIsAdmin
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Перевіряємо: чи користувач залогінений ТА чи має роль 'admin'
-        if ($request->user() && $request->user()->role === 'admin') {
+        // Перевіряємо: чи користувач залогінений ТА чи має права адміна
+        if ($request->user() && $request->user()->isAdmin()) {
             return $next($request);
         }
 
