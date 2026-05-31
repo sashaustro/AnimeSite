@@ -83,6 +83,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/anime/{anime}/episodes/create', [EpisodeController::class, 'create'])->name('episodes.create');
     Route::post('/anime/{anime}/episodes', [EpisodeController::class, 'store'])->name('episodes.store');
     Route::get('/episodes/{episode}/edit', [EpisodeController::class, 'edit'])->name('episodes.edit');
+    Route::get('/episodes/{episode}/play', [EpisodeController::class, 'play'])->name('episodes.play');
     Route::put('/episodes/{episode}', [EpisodeController::class, 'update'])->name('episodes.update');
     Route::delete('/episodes/{episode}', [EpisodeController::class, 'destroy'])->name('episodes.destroy');
 

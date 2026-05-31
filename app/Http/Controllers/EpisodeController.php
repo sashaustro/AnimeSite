@@ -38,6 +38,11 @@ class EpisodeController extends Controller
         return view('Episode.edit', compact('episode'));
     }
 
+    public function play(Episode $episode)
+    {
+        return view('Episode.player', compact('episode'));
+    }
+
     public function update(Request $request, Episode $episode)
     {
         $validated = $request->validate([

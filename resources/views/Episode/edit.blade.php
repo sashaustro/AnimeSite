@@ -1,7 +1,9 @@
 @extends('layouts.admin')
 
 @section('title', 'Редагувати Епізод')
-@section('page_title', 'Редагувати епізод: ' . $episode->anime->title)
+@section('page_title')
+    <span title="Редагувати епізод: {{ $episode->anime->title }}" style="cursor: help;">Редагувати епізод: {{ \Illuminate\Support\Str::limit($episode->anime->title, 50) }}</span>
+@endsection
 
 @section('content')
 <div class="card card-warning">

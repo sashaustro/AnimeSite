@@ -1,7 +1,9 @@
 @extends('layouts.admin')
 
 @section('title', 'Додати Епізод')
-@section('page_title', 'Додати епізод до: ' . $anime->title)
+@section('page_title')
+    <span title="Додати епізод до: {{ $anime->title }}" style="cursor: help;">Додати епізод до: {{ \Illuminate\Support\Str::limit($anime->title, 50) }}</span>
+@endsection
 
 @section('content')
 <div class="card card-success">

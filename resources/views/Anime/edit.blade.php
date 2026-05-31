@@ -270,7 +270,13 @@
                     <tr>
                         <td>{{ $episode->episode_number }}</td>
                         <td>{{ $episode->title ?: '—' }}</td>
-                        <td><a href="{{ $episode->video_url }}" target="_blank">Відкрити відео</a></td>
+                        <td>
+                            @if(Str::contains(strtolower($episode->video_url), '<iframe'))
+                                <a href="{{ route('episodes.play', $episode->id) }}" target="_blank">Відкрити відео</a>
+                            @else
+                                <a href="{{ $episode->video_url }}" target="_blank">Відкрити відео</a>
+                            @endif
+                        </td>
                         <td>
                             <form action="{{ route('episodes.destroy', $episode->id) }}" method="POST" style="display: flex; gap: 5px;">
                                 <a href="{{ route('episodes.edit', $episode->id) }}" class="btn btn-sm btn-info" title="Редагувати">

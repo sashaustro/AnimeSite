@@ -95,11 +95,6 @@ class CommentController extends Controller
             $author->reputation += $voteValue;
         }
 
-        // Захист від нескінченного мінусу
-        if ($author->reputation < -100) {
-            $author->reputation = -100;
-        }
-
         $author->save();
 
         return response()->json([
