@@ -3,16 +3,17 @@
 @section('title', $genre->name . ' | AniHub')
 
 @section('content')
-<div class="genre-hero" style="position: relative; margin-bottom: 3rem;">
+<div class="container" style="margin-top: 1.5rem;">
+<div class="genre-hero" style="position: relative; margin-bottom: 0.5rem; border-radius: 24px; overflow: hidden; height: 420px;">
     @if($topAnime->count() > 0)
         @php
             $bgImages = $topAnime->filter(fn($a) => $a->image)->values();
             $count = $bgImages->count();
         @endphp
-        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 450px; overflow: hidden; z-index: -1;">
+        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 420px; overflow: hidden; z-index: -1;">
             @foreach($bgImages as $index => $anime)
                 <img src="{{ asset('storage/' . $anime->image) }}" 
-                     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; filter: blur(25px) brightness(0.4); transform: scale(1.1); 
+                     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; filter: blur(10px) brightness(0.5); transform: scale(1.1); 
                      @if($count > 1) 
                          animation: bgFade{{$count}} {{ $count * 5 }}s infinite {{ $index * 5 }}s; 
                          opacity: 0; 
@@ -39,10 +40,11 @@
         @endif
     @endif
     
-    <div class="container" style="padding-top: 5rem; padding-bottom: 2rem; text-align: center;">
-        <h1 style="font-size: 3.5rem; font-weight: 800; color: white; text-shadow: 0 4px 15px rgba(0,0,0,0.5); margin-bottom: 1rem;">{{ $genre->name }}</h1>
-        <p style="color: rgba(255,255,255,0.7); font-size: 1.1rem;">Аніме • Жанри • {{ $genre->name }}</p>
+    <div class="container" style="height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+        <h1 style="font-size: 3.5rem; font-weight: 800; color: white; text-shadow: 0 4px 15px rgba(0,0,0,0.5); margin-bottom: 0.5rem;">{{ $genre->name }}</h1>
+        <p style="color: rgba(255,255,255,0.7); font-size: 1.1rem; text-shadow: 0 2px 10px rgba(0,0,0,0.5);">Аніме • Жанри • {{ $genre->name }}</p>
     </div>
+</div>
 </div>
 
 <div class="container">
@@ -90,6 +92,14 @@
         <div style="flex: 1; min-width: 300px;">
             @include('Anime.partials.grid', ['animes' => $animes])
         </div>
+    </div>
+
+    <div style="margin-top: 4rem; margin-bottom: 2rem; padding: 3rem 2rem; background: linear-gradient(135deg, rgba(34, 18, 64, 0.8), rgba(20, 10, 40, 0.9)); border-radius: 20px; text-align: center; border: 1px solid rgba(138, 43, 226, 0.2);">
+        <h3 style="font-size: 1.8rem; font-weight: 700; color: white; margin-bottom: 0.5rem;">Шукаєте ще більше аніме в жанрі {{ mb_strtolower($genre->name) }}?</h3>
+        <p style="color: rgba(255,255,255,0.7); font-size: 1rem; margin-bottom: 2rem;">Перегляньте повний каталог з фільтрами за роками, рейтингом, статусом та іншими критеріями</p>
+        <a href="{{ route('home', ['genres[]' => $genre->id]) }}" class="btn" style="background: var(--gradient-primary); color: white; padding: 0.8rem 2rem; border-radius: 30px; font-weight: 600; font-size: 1.1rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 5px 15px rgba(138, 43, 226, 0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+            Відкрити каталог <i class="fas fa-arrow-right"></i>
+        </a>
     </div>
 </div>
 

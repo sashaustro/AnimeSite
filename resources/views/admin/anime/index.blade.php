@@ -194,11 +194,7 @@
                         <td class="text-right" onclick="event.stopPropagation()">
                             <a href="{{ route('anime.edit', $anime->id) }}" class="btn btn-sm btn-info" title="Редагувати"><i class="fas fa-edit"></i></a>
 
-                            <form action="{{ route('anime.destroy', $anime->id) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Видалити це аніме?');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-danger" title="Видалити"><i class="fas fa-trash"></i></button>
-                            </form>
+                            <button type="button" class="btn btn-sm btn-danger" title="Видалити" onclick="openConfirmModal('{{ route('anime.destroy', $anime->id) }}', 'Ви впевнені, що хочете видалити це аніме?', 'Видалити', 'btn-danger', 'DELETE')"><i class="fas fa-trash"></i></button>
                         </td>
                     </tr>
                 @empty
@@ -216,10 +212,49 @@
         </div>
     @endif
 </div>
+
+<!-- Action Confirm Modal -->
+<div class="modal fade" id="actionConfirmModal" tabindex="-1" role="dialog" aria-labelledby="actionConfirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <form id="actionConfirmForm" method="POST" action="">
+      @csrf
+      <input type="hidden" name="_method" id="actionMethod" value="POST">
+      
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="actionConfirmModalLabel">Підтвердження дії</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p id="actionConfirmMessage" style="font-size: 1rem; margin-bottom: 0;">Ви впевнені?</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Скасувати</button>
+          <button type="submit" class="btn btn-primary" id="actionSubmitBtn">Підтвердити</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
 @endsection
 
 @push('scripts')
 <script>
+    function openConfirmModal(actionUrl, message, btnText, btnClass, method = 'POST') {
+        document.getElementById('actionConfirmForm').action = actionUrl;
+        document.getElementById('actionConfirmMessage').innerText = message;
+        
+        let btn = document.getElementById('actionSubmitBtn');
+        btn.innerText = btnText;
+        btn.className = 'btn ' + btnClass;
+        
+        document.getElementById('actionMethod').value = method;
+        
+        $('#actionConfirmModal').modal('show');
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         const toggleBtn = document.getElementById('toggleAnimeSearch');
         const searchContainer = document.getElementById('animeSearchContainer');

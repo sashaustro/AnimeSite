@@ -32,6 +32,9 @@
                     <div class="details-poster" style="background-color: #252529; display: flex; align-items: center; justify-content: center; color: #666; margin-bottom: 0; width: 100%;">Немає постера</div>
                 @endif
 
+                <div style="position: absolute; top: 10px; left: 10px; z-index: 10;">
+                    <span style="background: var(--gradient-primary); color: white; padding: 0.3rem 0.6rem; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.5); display: inline-block;">NEW</span>
+                </div>
                 <div class="rating-badge" style="font-size: 0.9rem; padding: 0.3rem 0.6rem; z-index: 10;">
                     <i class="fas fa-star" style="font-size: 0.8rem;"></i>
                     {{ $anime->ratings->count() > 0 ? number_format($anime->ratings->avg('score'), 1) : '0.0' }}
@@ -245,7 +248,6 @@
                                     {{ $anime->title }}
                                 @endif
                             </span>
-                            <span style="background: var(--gradient-primary); color: white; padding: 0.2rem 0.6rem; border-radius: var(--radius-sm); font-size: 0.8rem; font-weight: bold; margin-top: -2px;">NEW</span>
                         </h1>
                         @if($anime->original_title)
                             <div style="color: var(--text-muted); font-size: 1.1rem; margin-top: 0.2rem; font-family: 'Inter', sans-serif;">
@@ -266,11 +268,19 @@
                 @endauth
             </div>
 
-            <div class="details-genres" style="margin-bottom: 1.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem;">
+            <div class="details-genres" style="margin-bottom: 1.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem;" id="genres-container">
                 @if(isset($anime->genres) && $anime->genres->count() > 0)
-                    @foreach($anime->genres as $genre)
-                        <span class="genre-tag" style="background: rgba(138, 43, 226, 0.15); color: #b370ff; border: 1px solid rgba(138, 43, 226, 0.3); padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 500;">{{ $genre->name }}</span>
+                    @php
+                        $genresCount = $anime->genres->count();
+                        $limit = 5;
+                    @endphp
+                    @foreach($anime->genres as $index => $genre)
+                        <span class="genre-tag {{ $index >= $limit ? 'hidden-genre' : '' }}" style="background: rgba(138, 43, 226, 0.15); color: #b370ff; border: 1px solid rgba(138, 43, 226, 0.3); padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 500; {{ $index >= $limit ? 'display: none;' : '' }}">{{ $genre->name }}</span>
                     @endforeach
+                    @if($genresCount > $limit)
+                        <button id="show-more-genres-btn" onclick="document.querySelectorAll('.hidden-genre').forEach(el => el.style.display = 'inline-block'); this.style.display = 'none'; document.getElementById('collapse-genres-btn').style.display = 'inline-block';" class="genre-tag" style="background: rgba(255, 255, 255, 0.05); color: #aaa; border: 1px solid rgba(255, 255, 255, 0.1); padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'; this.style.color='#fff';" onmouseout="this.style.background='rgba(255, 255, 255, 0.05)'; this.style.color='#aaa';">+{{ $genresCount - $limit }}</button>
+                        <button id="collapse-genres-btn" onclick="document.querySelectorAll('.hidden-genre').forEach(el => el.style.display = 'none'); this.style.display = 'none'; document.getElementById('show-more-genres-btn').style.display = 'inline-block';" class="genre-tag" style="display: none; background: rgba(255, 255, 255, 0.05); color: #aaa; border: 1px solid rgba(255, 255, 255, 0.1); padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'; this.style.color='#fff';" onmouseout="this.style.background='rgba(255, 255, 255, 0.05)'; this.style.color='#aaa';">Згорнути</button>
+                    @endif
                 @endif
             </div>
 
@@ -385,7 +395,7 @@
                         @endphp
                         <iframe src="{{ $videoUrl }}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
                     @else
-                        <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-size: 1.2rem;">Відео недоступне або епізоди ще не додані</div>
+                        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 1.2rem;">Відео недоступне або епізоди ще не додані</div>
                     @endif
                 </div>
 
