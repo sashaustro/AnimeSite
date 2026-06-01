@@ -29,7 +29,7 @@
             <div class="form-group">
                 <label>Поточне відео</label>
                 <div>
-                    <a href="{{ str_starts_with($episode->video_url, 'http') ? $episode->video_url : asset($episode->video_url) }}" target="_blank" class="btn btn-sm btn-info">Переглянути поточне відео</a>
+                    <a href="{{ route('episodes.play', $episode->id) }}" target="_blank" class="btn btn-sm btn-info">Переглянути поточне відео</a>
                 </div>
             </div>
 
